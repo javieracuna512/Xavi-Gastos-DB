@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Financiero · Javier Acuña</title>
+<style>
+  :root {
+    --bg: #f5f5f0;
+    --bg2: #ffffff;
+    --bg3: #eeeee8;
+    --border: #d8d8d0;
+    --border2: #c8c8c0;
+    --text: #1a1a18;
+    --text2: #5a5a55;
+    --text3: #8a8a85;
+    --green: #2d7a3a;
+    --green-bg: #e8f5eb;
+    --green-border: #a8d8b0;
+    --red: #c0392b;
+    --red-bg: #fdecea;
+    --red-border: #f0b0a8;
+    --amber: #b06010;
+    --amber-bg: #fdf3e3;
+    --amber-border: #f0c880;
+    --blue: #1a5fa8;
+    --blue-bg: #e8f0fb;
+    --blue-border: #a0c0e8;
+    --purple: #5a3db0;
+    --purple-bg: #f0edf8;
+    --purple-border: #c0b0e8;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 13px; color: var(--text); }
+
+  /* NAV */
+  .nav { background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0; padding: 0 20px; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow); }
+  .nav-brand { font-size: 14px; font-weight: 600; color: var(--text); padding: 14px 20px 14px 0; border-right: 1px solid var(--border); margin-right: 8px; }
+  .nav-tab { padding: 14px 16px; cursor: pointer; font-size: 13px; color: var(--text2); border-bottom: 2px solid transparent; transition: all .15s; white-space: nowrap; }
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 500; }
+
+  /* PAGES */
+  .page { display: none; padding: 20px; max-width: 1200px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* CARDS */
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
+  .card-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text3); margin-bottom: 12px; }
+
+  /* GRID */
+  .grid4 { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 16px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-bottom: 16px; }
+  .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; margin-bottom: 16px; }
+
+  /* METRIC CARD */
+  .metric { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+  .metric-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+  .metric-val { font-size: 22px; font-weight: 600; color: var(--text); }
+  .metric-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+  /* TAG */
+  .tag { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; letter-spacing: .03em; }
+  .tag-green { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .tag-red { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .tag-amber { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .tag-blue { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-border); }
+  .tag-purple { background: var(--purple-bg); color: var(--purple); border: 1px solid var(--purple-border); }
+
+  /* SECTION LABEL */
+  .sec-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin: 20px 0 10px; }
+
+  /* DIVIDER */
+  hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+
+  /* TABLE */
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { background: var(--bg3); font-weight: 600; color: var(--text2); font-size: 11px; text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; position: sticky; top: 0; }
+  td { padding: 6px 10px; border-bottom: 1px solid var(--border); color: var(--text); white-space: nowrap; }
+  td.r { text-align: right; font-variant-numeric: tabular-nums; }
+  td.pos { color: var(--green); font-weight: 600; text-align: right; }
+  td.neg { color: var(--red); font-weight: 600; text-align: right; }
+  td.bold { font-weight: 600; }
+  tr:hover td { background: var(--bg3); }
+  tr.row-master td { background: #e8f5eb; }
+  tr.row-viaje td { background: #f0edf8; }
+  tr.row-auto td { background: #fdf3e3; }
+  tr.row-pasaje td { background: #e8f0fb; }
+  tr.row-hist td { background: var(--bg3); color: var(--text2); }
+  tr.row-hist td.bold { color: var(--text2); }
+
+  /* INPUTS */
+  input[type=number], input[type=text], input[type=date], select, textarea {
+    background: var(--bg); border: 1px solid var(--border2); border-radius: var(--radius-sm);
+    padding: 7px 10px; font-size: 12px; color: var(--text); width: 100%; font-family: inherit;
+    transition: border-color .15s;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--blue); background: white; }
+  input[type=number] { text-align: right; }
+
+  /* BUTTONS */
+  .btn { padding: 8px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border2); background: var(--bg2); cursor: pointer; font-size: 12px; font-weight: 500; color: var(--text); transition: all .15s; }
+  .btn:hover { background: var(--bg3); }
+  .btn-primary { background: var(--blue); color: white; border-color: var(--blue); }
+  .btn-primary:hover { background: #1450a0; }
+  .btn-danger { background: var(--red-bg); color: var(--red); border-color: var(--red-border); }
+  .btn-danger:hover { background: var(--red); color: white; }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+
+  /* PROGRESS BAR */
+  .progress-wrap { background: var(--bg3); border-radius: 4px; height: 8px; margin: 6px 0; overflow: hidden; }
+  .progress-fill { height: 8px; border-radius: 4px; transition: width .4s; }
+
+  /* FORM GRID */
+  .form-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; align-items: end; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-label { font-size: 11px; font-weight: 500; color: var(--text2); }
+
+  /* CATEGORY BADGE COLORS */
+  .cat-alim { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+  .cat-trans { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+  .cat-serv { background: #f3e5f5; color: #6a1b9a; border: 1px solid #ce93d8; }
+  .cat-ocio { background: #fce4ec; color: #880e4f; border: 1px solid #f48fb1; }
+  .cat-salud { background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; }
+  .cat-educ { background: #e0f7fa; color: #006064; border: 1px solid #80deea; }
+  .cat-aho { background: #f1f8e9; color: #33691e; border: 1px solid #c5e1a5; }
+  .cat-otros { background: #fafafa; color: #424242; border: 1px solid #bdbdbd; }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--bg2); border-radius: var(--radius); padding: 24px; width: 500px; max-width: 95vw; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
+  .modal-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+
+  /* MISC */
+  .note-box { background: var(--amber-bg); border: 1px solid var(--amber-border); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 12px; color: var(--amber); margin-bottom: 12px; }
+  .info-box { background: var(--blue-bg); border: 1px solid var(--blue-border); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 12px; color: var(--blue); margin-bottom: 12px; }
+  .flex-between { display: flex; justify-content: space-between; align-items: center; }
+  .flex-gap { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .mt8 { margin-top: 8px; }
+  .mb12 { margin-bottom: 12px; }
+  .editable-cell { cursor: pointer; }
+  .editable-cell:hover { background: #fffbf0 !important; }
+  .cell-input { width: 100%; border: none; background: #fffbf0; font-size: 12px; font-family: inherit; text-align: right; padding: 0; outline: 1px solid var(--amber-border); }
+
+  /* CHART BARS */
+  .bar-chart { display: flex; flex-direction: column; gap: 6px; }
+  .bar-row { display: flex; align-items: center; gap: 8px; }
+  .bar-label { font-size: 11px; color: var(--text2); width: 90px; flex-shrink: 0; text-align: right; }
+  .bar-track { flex: 1; background: var(--bg3); border-radius: 3px; height: 14px; position: relative; }
+  .bar-fill-inner { height: 14px; border-radius: 3px; }
+  .bar-val { font-size: 11px; color: var(--text2); width: 70px; flex-shrink: 0; }
+
+  @media (max-width: 700px) {
+    .grid4 { grid-template-columns: repeat(2, 1fr); }
+    .grid3 { grid-template-columns: repeat(2, 1fr); }
+    .form-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="nav-brand">JA · Finanzas</div>
+  <div class="nav-tab active" onclick="showPage('flujo')">Flujo de Caja</div>
+  <div class="nav-tab" onclick="showPage('gastos')">Registro de Gastos</div>
+  <div class="nav-tab" onclick="showPage('resumen')">Dashboard</div>
+</div>
+
+<!-- ======================== PAGE 1: FLUJO DE CAJA ======================== -->
+<div id="page-flujo" class="page active">
+
+  <div class="flex-between mb12">
+    <div>
+      <div style="font-size:18px;font-weight:600;margin-bottom:3px">Flujo de Caja Personal · 2026–2027</div>
+      <div style="font-size:12px;color:var(--text2)">Planificación financiera · Javier Acuña Ariza</div>
+    </div>
+    <div class="flex-gap">
+      <span style="font-size:11px;color:var(--text3)">Escenario:</span>
+      <button class="btn btn-sm active-esc" id="esc-base" onclick="setEsc('base')">Base</button>
+      <button class="btn btn-sm" id="esc-opt" onclick="setEsc('opt')">Optimista</button>
+      <button class="btn btn-sm" id="esc-cons" onclick="setEsc('cons')">Conservador</button>
+    </div>
+  </div>
+
+  <!-- KPI row -->
+  <div class="grid4">
+    <div class="metric">
+      <div class="metric-label">Ahorrado hoy</div>
+      <div class="metric-val" id="kpi-ahorro">S/ 7,500</div>
+      <div class="metric-sub">Inicio abril 2026</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Falta para máster</div>
+      <div class="metric-val" id="kpi-falta" style="color:var(--red)">S/ 23,000</div>
+      <div class="metric-sub">Límite: octubre 2026</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Mes en que se paga máster</div>
+      <div class="metric-val" id="kpi-master-mes" style="font-size:16px">—</div>
+      <div class="metric-sub" id="kpi-master-sub">calculando...</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Saldo proyectado abr 2027</div>
+      <div class="metric-val" id="kpi-saldo-final">—</div>
+      <div class="metric-sub">Proyección dic 2027</div>
+    </div>
+  </div>
+
+  <!-- Parámetros editables -->
+  <div class="card mb12">
+    <div class="card-title">Parámetros del flujo (editables)</div>
+    <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:12px">
+      <div class="form-group">
+        <label class="form-label">Sueldo neto mensual</label>
+        <input type="number" id="p-neto" value="3400" onchange="renderFlujo()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Gastos de vida mensual</label>
+        <input type="number" id="p-gastos" value="1700" onchange="renderFlujo()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ahorro actual (s/ para máster)</label>
+        <input type="number" id="p-init" value="7500" onchange="renderFlujo()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Total máster a pagar</label>
+        <input type="number" id="p-master" value="23000" onchange="renderFlujo()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Presupuesto tour Europa</label>
+        <input type="number" id="p-tour" value="5000" onchange="renderFlujo()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Compra carro (S/)</label>
+        <input type="number" id="p-carro" value="0" placeholder="0" onchange="renderFlujo()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mes compra carro</label>
+        <select id="p-carro-mes" onchange="renderFlujo()">
+          <option value="-1">— no aplica —</option>
+          <option value="0">Abr 26</option><option value="1">May 26</option>
+          <option value="2">Jun 26</option><option value="3">Jul 26</option>
+          <option value="4">Ago 26</option><option value="5">Set 26</option>
+          <option value="6">Oct 26</option><option value="7">Nov 26</option>
+          <option value="8">Dic 26</option><option value="9">Ene 27</option>
+          <option value="10">Feb 27</option><option value="11">Mar 27</option>
+          <option value="12">Abr 27</option><option value="13">May 27</option>
+          <option value="14">Jun 27</option><option value="15" selected>Jul 27</option>
+          <option value="16">Ago 27</option><option value="17">Set 27</option>
+          <option value="18">Oct 27</option><option value="19">Nov 27</option>
+          <option value="20">Dic 27</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla flujo -->
+  <div class="card">
+    <div class="flex-between mb12">
+      <div class="card-title" style="margin-bottom:0">Flujo mes a mes</div>
+      <div class="flex-gap" style="font-size:11px;color:var(--text3)">
+        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#e8f5eb;border:1px solid #a8d8b0;border-radius:2px;display:inline-block"></span>Máster pagado</span>
+        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#e8f0fb;border:1px solid #a0c0e8;border-radius:2px;display:inline-block"></span>Pasaje</span>
+        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#f0edf8;border:1px solid #c0b0e8;border-radius:2px;display:inline-block"></span>Viaje Madrid</span>
+        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#fdf3e3;border:1px solid #f0c880;border-radius:2px;display:inline-block"></span>Vehículo</span>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Mes</th>
+            <th style="text-align:right">Neto</th>
+            <th style="text-align:right">Extras</th>
+            <th style="text-align:right">Ing. total</th>
+            <th style="text-align:right">Vida</th>
+            <th style="text-align:right">G. especial</th>
+            <th style="text-align:right">Flujo mes</th>
+            <th style="text-align:right">Acumulado</th>
+            <th style="text-align:right">F. máster</th>
+            <th>Evento / nota</th>
+          </tr>
+        </thead>
+        <tbody id="flujo-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Notas CTS y millas -->
+  <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px">
+    <div class="card">
+      <div class="card-title">CTS — cálculo correcto</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.6">
+        Fórmula: (Bruto ÷ 12) × 6 meses<br>
+        S/ 4,000 ÷ 12 × 6 = <strong style="color:var(--text)">S/ 2,000 por cuota</strong><br>
+        Mayo 2026 y Noviembre 2026.<br>
+        <span style="color:var(--text3);font-size:11px">No incluye 1/6 gratificación en régimen general.</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Gratificaciones Perú</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.6">
+        <strong style="color:var(--text)">Julio 2026:</strong> S/ 4,000 + 9% = S/ 4,360<br>
+        <strong style="color:var(--text)">Diciembre 2026:</strong> S/ 4,000 + 9% = S/ 4,360<br>
+        <span style="color:var(--text3);font-size:11px">Incluye bonificación EsSalud del empleador.</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Millas Benefit · 16,000 pts</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.6">
+        Valor estimado en vuelos: <strong style="color:var(--text)">S/ 480–700</strong><br>
+        Úsalas en iberia.com buscando disponibilidad de award o en LATAM Pass para LIM–MAD.<br>
+        <span style="color:var(--text3);font-size:11px">Compra pasaje 6–7 meses antes para mejor precio.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== PAGE 2: REGISTRO DE GASTOS ======================== -->
+<div id="page-gastos" class="page">
+
+  <div class="flex-between mb12">
+    <div>
+      <div style="font-size:18px;font-weight:600;margin-bottom:3px">Registro de Gastos</div>
+      <div style="font-size:12px;color:var(--text2)">Ingresa tus gastos diarios · la data alimenta el dashboard</div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal()">+ Nuevo gasto</button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="card mb12">
+    <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:end">
+      <div class="form-group">
+        <label class="form-label">Filtrar por mes</label>
+        <select id="filtro-mes" onchange="renderGastos()">
+          <option value="">Todos</option>
+          <option value="2026-01">Ene 2026</option>
+          <option value="2026-02">Feb 2026</option>
+          <option value="2026-03">Mar 2026</option>
+          <option value="2026-04" selected>Abr 2026</option>
+          <option value="2026-05">May 2026</option>
+          <option value="2026-06">Jun 2026</option>
+          <option value="2026-07">Jul 2026</option>
+          <option value="2026-08">Ago 2026</option>
+          <option value="2026-09">Set 2026</option>
+          <option value="2026-10">Oct 2026</option>
+          <option value="2026-11">Nov 2026</option>
+          <option value="2026-12">Dic 2026</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tipo de gasto</label>
+        <select id="filtro-tipo" onchange="renderGastos()">
+          <option value="">Todos</option>
+          <option value="Alimentación">Alimentación</option>
+          <option value="Transporte">Transporte</option>
+          <option value="Servicios">Servicios</option>
+          <option value="Ocio">Ocio / Entretenimiento</option>
+          <option value="Salud">Salud</option>
+          <option value="Educación">Educación</option>
+          <option value="Ahorro/Inversión">Ahorro / Inversión</option>
+          <option value="Otros">Otros</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Buscar detalle</label>
+        <input type="text" id="filtro-buscar" placeholder="Buscar..." oninput="renderGastos()">
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="limpiarFiltros()" style="flex:1">Limpiar</button>
+        <button class="btn btn-danger btn-sm" onclick="if(confirm('¿Borrar todos los gastos?')){gastos=[];saveData();renderGastos();renderDashboard();}">Borrar todo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resumen del mes filtrado -->
+  <div id="resumen-mes-gastos" class="grid4" style="margin-bottom:16px"></div>
+
+  <!-- Tabla gastos -->
+  <div class="card">
+    <div class="card-title" id="gastos-titulo">Gastos registrados</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Tipo</th>
+            <th>Detalle</th>
+            <th style="text-align:right">Monto</th>
+            <th>Pago</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="gastos-body"></tbody>
+      </table>
+    </div>
+    <div id="gastos-empty" style="text-align:center;padding:30px;color:var(--text3);font-size:13px;display:none">No hay gastos registrados para este período.</div>
+  </div>
+</div>
+
+<!-- ======================== PAGE 3: DASHBOARD ======================== -->
+<div id="page-resumen" class="page">
+
+  <div style="font-size:18px;font-weight:600;margin-bottom:3px">Dashboard de Gastos</div>
+  <div style="font-size:12px;color:var(--text2);margin-bottom:16px">Resumen visual · basado en gastos registrados</div>
+
+  <!-- Selector mes dashboard -->
+  <div class="flex-gap mb12">
+    <span style="font-size:12px;color:var(--text2)">Ver mes:</span>
+    <select id="dash-mes" onchange="renderDashboard()" style="width:auto;padding:6px 10px">
+      <option value="2026-04" selected>Abr 2026</option>
+      <option value="2026-05">May 2026</option>
+      <option value="2026-06">Jun 2026</option>
+      <option value="2026-07">Jul 2026</option>
+      <option value="2026-08">Ago 2026</option>
+      <option value="2026-09">Set 2026</option>
+      <option value="2026-10">Oct 2026</option>
+      <option value="2026-11">Nov 2026</option>
+      <option value="2026-12">Dic 2026</option>
+    </select>
+    <span style="font-size:12px;color:var(--text3)" id="dash-total-label"></span>
+  </div>
+
+  <div class="grid2">
+    <!-- Gráfico por categoría -->
+    <div class="card">
+      <div class="card-title">Gasto por categoría</div>
+      <div id="chart-cats" class="bar-chart"></div>
+    </div>
+    <!-- Gráfico por forma de pago -->
+    <div class="card">
+      <div class="card-title">Por forma de pago</div>
+      <div id="chart-pago" class="bar-chart"></div>
+    </div>
+  </div>
+
+  <div class="grid3" style="margin-top:0">
+    <div class="metric" id="dash-total"></div>
+    <div class="metric" id="dash-mayor-cat"></div>
+    <div class="metric" id="dash-transacciones"></div>
+  </div>
+
+  <!-- Gráfico columnas histórico -->
+  <div class="card" style="margin-top:16px">
+    <div class="flex-between mb12" style="align-items:center">
+      <div class="card-title" style="margin-bottom:0">Gasto total por mes &middot; histórico</div>
+      <div class="flex-gap" style="flex-wrap:wrap;gap:6px">
+        <span style="font-size:11px;color:var(--text2)">Filtrar categorías:</span>
+        <label style="font-size:11px;display:flex;align-items:center;gap:3px"><input type="checkbox" id="hf-alim" checked onchange="renderHistoricoChart()"> Alimentación</label>
+        <label style="font-size:11px;display:flex;align-items:center;gap:3px"><input type="checkbox" id="hf-trans" checked onchange="renderHistoricoChart()"> Transporte</label>
+        <label style="font-size:11px;display:flex;align-items:center;gap:3px"><input type="checkbox" id="hf-serv" checked onchange="renderHistoricoChart()"> Servicios</label>
+        <label style="font-size:11px;display:flex;align-items:center;gap:3px"><input type="checkbox" id="hf-ocio" checked onchange="renderHistoricoChart()"> Ocio</label>
+        <label style="font-size:11px;display:flex;align-items:center;gap:3px"><input type="checkbox" id="hf-salud" checked onchange="renderHistoricoChart()"> Salud</label>
+        <label style="font-size:11px;display:flex;align-items:center;gap:3px"><input type="checkbox" id="hf-educ" checked onchange="renderHistoricoChart()"> Educación</label>
+        <label style="font-size:11px;display:flex;align-items:center;gap:3px"><input type="checkbox" id="hf-otros" checked onchange="renderHistoricoChart()"> Otros</label>
+        <button class="btn btn-sm" onclick="['hf-alim','hf-trans','hf-serv','hf-ocio','hf-salud','hf-educ','hf-otros'].forEach(function(x){document.getElementById(x).checked=true});renderHistoricoChart()" style="padding:2px 8px">Todo</button>
+        <button class="btn btn-sm" onclick="['hf-alim','hf-trans','hf-serv','hf-ocio','hf-salud','hf-educ','hf-otros'].forEach(function(x){var v=x==='hf-alim'||x==='hf-trans'||x==='hf-serv'||x==='hf-ocio'||x==='hf-salud';document.getElementById(x).checked=v});renderHistoricoChart()" style="padding:2px 8px">Solo vida</button>
+      </div>
+    </div>
+    <div id="chart-col-hist" style="overflow-x:auto;padding:4px 0 8px 0"></div>
+  </div>
+
+  <!-- Tabla resumen por mes (histórico) -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">Resumen histórico por mes</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Mes</th>
+            <th style="text-align:right">Total gastado</th>
+            <th style="text-align:right">Alimentación</th>
+            <th style="text-align:right">Transporte</th>
+            <th style="text-align:right">Servicios</th>
+            <th style="text-align:right">Ocio</th>
+            <th style="text-align:right">Salud</th>
+            <th style="text-align:right">Educación</th>
+            <th style="text-align:right">Otros</th>
+            <th style="text-align:right">Transacciones</th>
+          </tr>
+        </thead>
+        <tbody id="hist-body"></tbody>
+      </table>
+    </div>
+    <div id="hist-empty" style="text-align:center;padding:30px;color:var(--text3);font-size:13px;display:none">Aún no hay gastos registrados.</div>
+  </div>
+</div>
+
+<!-- ======================== MODAL NUEVO GASTO ======================== -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Nuevo gasto</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div class="form-group">
+        <label class="form-label">Fecha</label>
+        <input type="date" id="g-fecha">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Monto (S/)</label>
+        <input type="number" id="g-monto" placeholder="0.00" step="0.01">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div class="form-group">
+        <label class="form-label">Tipo de gasto</label>
+        <select id="g-tipo">
+          <option>Alimentación</option>
+          <option>Transporte</option>
+          <option>Servicios</option>
+          <option>Ocio / Entretenimiento</option>
+          <option>Salud</option>
+          <option>Educación</option>
+          <option>Ahorro / Inversión</option>
+          <option>Otros</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Forma de pago</label>
+        <select id="g-pago">
+          <option>Visa Signature Interbank</option>
+          <option>Efectivo</option>
+          <option>Transferencia</option>
+          <option>Débito</option>
+          <option>Otros</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label class="form-label">Detalle / descripción</label>
+      <input type="text" id="g-detalle" placeholder="Ej: Almuerzo, Gasolina, Netflix...">
+    </div>
+    <div class="flex-gap" style="justify-content:flex-end">
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarGasto()">Guardar gasto</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const CATS = ['Alimentación','Transporte','Servicios','Ocio / Entretenimiento','Salud','Educación','Ahorro / Inversión','Otros'];
+const CAT_COLORS = ['#e65100','#1565c0','#6a1b9a','#880e4f','#1b5e20','#006064','#33691e','#424242'];
+const CAT_CLASSES = ['cat-alim','cat-trans','cat-serv','cat-ocio','cat-salud','cat-educ','cat-aho','cat-otros'];
+
+// Historial de gastos previos (Mar 2026 y anteriores — datos referencia según Excel)
+// El usuario puede ajustar estos valores editando directamente
+const HIST_PREVIO = [
+  {"id":"xl0001","fecha":"2025-08-01","tipo":"Otros","detalle":"Publicidad","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0002","fecha":"2025-08-02","tipo":"Otros","detalle":"Cargador Iphone","monto":70.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0003","fecha":"2025-08-02","tipo":"Servicios","detalle":"Streaming","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0004","fecha":"2025-08-03","tipo":"Alimentación","detalle":"Cena Restaurante","monto":100.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0005","fecha":"2025-08-03","tipo":"Otros","detalle":"Compras Otros","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0006","fecha":"2025-08-04","tipo":"Transporte","detalle":"Mantenimiento Moto","monto":83.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0007","fecha":"2025-08-04","tipo":"Servicios","detalle":"Servicios","monto":65.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0008","fecha":"2025-08-06","tipo":"Alimentación","detalle":"Almuerzo Restaurante","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0009","fecha":"2025-08-06","tipo":"Otros","detalle":"Compras Otros","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0010","fecha":"2025-08-08","tipo":"Transporte","detalle":"Combustible","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0011","fecha":"2025-08-09","tipo":"Ocio / Entretenimiento","detalle":"Cine","monto":55.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0012","fecha":"2025-08-09","tipo":"Alimentación","detalle":"Cena Restaurante","monto":25.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0013","fecha":"2025-08-12","tipo":"Alimentación","detalle":"Cena Restaurante","monto":35.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0014","fecha":"2025-08-13","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":35.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0015","fecha":"2025-08-16","tipo":"Ocio / Entretenimiento","detalle":"Pasaje Viaje","monto":80.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0016","fecha":"2025-08-17","tipo":"Ocio / Entretenimiento","detalle":"Pasaje Viaje","monto":80.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0017","fecha":"2025-08-17","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":80.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0018","fecha":"2025-08-19","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0019","fecha":"2025-08-21","tipo":"Alimentación","detalle":"Cena Restaurante","monto":28.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0020","fecha":"2025-08-23","tipo":"Alimentación","detalle":"Cena Restaurante","monto":80.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0021","fecha":"2025-08-23","tipo":"Servicios","detalle":"Linea Movil","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0022","fecha":"2025-08-23","tipo":"Otros","detalle":"Publicidad","monto":35.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0023","fecha":"2025-08-24","tipo":"Alimentación","detalle":"Cena Restaurante","monto":22.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0024","fecha":"2025-08-25","tipo":"Ocio / Entretenimiento","detalle":"Juegos","monto":51.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0025","fecha":"2025-08-26","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0026","fecha":"2025-08-27","tipo":"Otros","detalle":"Publicidad","monto":66.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0027","fecha":"2025-08-28","tipo":"Otros","detalle":"Cuota 1 Iphone","monto":600.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0028","fecha":"2025-08-28","tipo":"Otros","detalle":"Compras Otros","monto":45.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0029","fecha":"2025-08-28","tipo":"Alimentación","detalle":"Desayuno","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0030","fecha":"2025-08-30","tipo":"Alimentación","detalle":"Comida","monto":250.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0031","fecha":"2025-08-30","tipo":"Otros","detalle":"Cargador Iphone","monto":90.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0032","fecha":"2025-08-30","tipo":"Ocio / Entretenimiento","detalle":"Cine","monto":55.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0033","fecha":"2025-08-30","tipo":"Otros","detalle":"Accesorio Iphone","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0034","fecha":"2025-08-31","tipo":"Transporte","detalle":"Combustible","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0035","fecha":"2025-09-01","tipo":"Otros","detalle":"Publicidad","monto":150.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0036","fecha":"2025-09-02","tipo":"Servicios","detalle":"Streaming","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0037","fecha":"2025-09-03","tipo":"Servicios","detalle":"Internet","monto":67.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0038","fecha":"2025-09-03","tipo":"Servicios","detalle":"Servicios","monto":65.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0039","fecha":"2025-09-03","tipo":"Servicios","detalle":"Agua","monto":45.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0040","fecha":"2025-09-03","tipo":"Servicios","detalle":"Luz","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0041","fecha":"2025-09-03","tipo":"Alimentación","detalle":"Comida","monto":36.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0042","fecha":"2025-09-04","tipo":"Alimentación","detalle":"Comida","monto":27.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0043","fecha":"2025-09-04","tipo":"Salud","detalle":"SS","monto":12.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0044","fecha":"2025-09-05","tipo":"Alimentación","detalle":"Comida","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0045","fecha":"2025-09-06","tipo":"Otros","detalle":"Yape","monto":17.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0046","fecha":"2025-09-07","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0047","fecha":"2025-09-07","tipo":"Alimentación","detalle":"Comida","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0048","fecha":"2025-09-09","tipo":"Alimentación","detalle":"Comida","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0049","fecha":"2025-09-11","tipo":"Alimentación","detalle":"Desayuno","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0050","fecha":"2025-09-13","tipo":"Salud","detalle":"SS","monto":23.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0051","fecha":"2025-09-13","tipo":"Otros","detalle":"Yape","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0052","fecha":"2025-09-13","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0053","fecha":"2025-09-14","tipo":"Alimentación","detalle":"Cena Restaurante","monto":55.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0054","fecha":"2025-09-17","tipo":"Otros","detalle":"Compras Otros","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0055","fecha":"2025-09-18","tipo":"Alimentación","detalle":"Cena Restaurante","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0056","fecha":"2025-09-18","tipo":"Alimentación","detalle":"Cena Restaurante","monto":14.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0057","fecha":"2025-09-18","tipo":"Otros","detalle":"Compras Otros","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0058","fecha":"2025-09-19","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0059","fecha":"2025-09-21","tipo":"Alimentación","detalle":"Cena Restaurante","monto":70.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0060","fecha":"2025-09-21","tipo":"Transporte","detalle":"Combustible","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0061","fecha":"2025-09-21","tipo":"Otros","detalle":"Compras Otros","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0062","fecha":"2025-09-21","tipo":"Alimentación","detalle":"Comida","monto":25.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0063","fecha":"2025-09-21","tipo":"Servicios","detalle":"Apple Suscripción","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0064","fecha":"2025-09-21","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0065","fecha":"2025-09-21","tipo":"Otros","detalle":"Desgravamen","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0066","fecha":"2025-09-22","tipo":"Otros","detalle":"Yape","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0067","fecha":"2025-09-23","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0068","fecha":"2025-09-23","tipo":"Servicios","detalle":"Linea Movil","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0069","fecha":"2025-09-24","tipo":"Alimentación","detalle":"Comida","monto":25.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0070","fecha":"2025-09-24","tipo":"Alimentación","detalle":"Cena Restaurante","monto":21.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0071","fecha":"2025-09-25","tipo":"Ocio / Entretenimiento","detalle":"Cine","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0072","fecha":"2025-09-26","tipo":"Salud","detalle":"SS","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0073","fecha":"2025-09-27","tipo":"Alimentación","detalle":"Almuerzo Restaurante","monto":105.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0074","fecha":"2025-09-28","tipo":"Otros","detalle":"Cuota 2 Iphone","monto":600.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0075","fecha":"2025-09-28","tipo":"Alimentación","detalle":"Comida","monto":21.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0076","fecha":"2025-09-28","tipo":"Otros","detalle":"Yape","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0077","fecha":"2025-09-28","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0078","fecha":"2025-09-28","tipo":"Transporte","detalle":"Taxi","monto":7.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0079","fecha":"2025-09-29","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":100.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0080","fecha":"2025-09-29","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0081","fecha":"2025-10-01","tipo":"Alimentación","detalle":"Comida","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0082","fecha":"2025-10-01","tipo":"Servicios","detalle":"YT Suscripción","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0084","fecha":"2025-10-02","tipo":"Alimentación","detalle":"Almuerzo Restaurante","monto":42.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0085","fecha":"2025-10-02","tipo":"Alimentación","detalle":"Cena Restaurante","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0086","fecha":"2025-10-02","tipo":"Servicios","detalle":"Streaming","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0087","fecha":"2025-10-03","tipo":"Servicios","detalle":"Internet","monto":67.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0088","fecha":"2025-10-03","tipo":"Servicios","detalle":"Agua","monto":45.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0089","fecha":"2025-10-04","tipo":"Educación","detalle":"Accesorio Laptop","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0090","fecha":"2025-10-05","tipo":"Otros","detalle":"Compras Otros","monto":45.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0091","fecha":"2025-10-05","tipo":"Transporte","detalle":"Taxi","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0092","fecha":"2025-10-06","tipo":"Alimentación","detalle":"Cena Restaurante","monto":55.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0093","fecha":"2025-10-06","tipo":"Transporte","detalle":"Combustible","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0094","fecha":"2025-10-06","tipo":"Alimentación","detalle":"Antojos","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0095","fecha":"2025-10-07","tipo":"Transporte","detalle":"Llanta","monto":117.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0096","fecha":"2025-10-07","tipo":"Transporte","detalle":"Llanta","monto":12.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0097","fecha":"2025-10-08","tipo":"Salud","detalle":"SS","monto":120.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0098","fecha":"2025-10-08","tipo":"Alimentación","detalle":"Comida","monto":112.5,"pago":"Visa Signature Interbank"},
+  {"id":"xl0099","fecha":"2025-10-08","tipo":"Otros","detalle":"Ropa","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0100","fecha":"2025-10-08","tipo":"Alimentación","detalle":"Comida","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0101","fecha":"2025-10-08","tipo":"Transporte","detalle":"Taxi","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0102","fecha":"2025-10-09","tipo":"Alimentación","detalle":"Desayuno","monto":4.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0103","fecha":"2025-10-10","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":11.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0104","fecha":"2025-10-10","tipo":"Alimentación","detalle":"Antojos","monto":3.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0105","fecha":"2025-10-11","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":84.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0106","fecha":"2025-10-11","tipo":"Ocio / Entretenimiento","detalle":"Pasaje Viaje","monto":60.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0107","fecha":"2025-10-11","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0108","fecha":"2025-10-12","tipo":"Alimentación","detalle":"Cena Restaurante","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0109","fecha":"2025-10-13","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0110","fecha":"2025-10-14","tipo":"Servicios","detalle":"YT Suscripción","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0111","fecha":"2025-10-14","tipo":"Salud","detalle":"SS","monto":12.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0112","fecha":"2025-10-14","tipo":"Alimentación","detalle":"Desayuno","monto":3.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0113","fecha":"2025-10-14","tipo":"Alimentación","detalle":"Desayuno","monto":2.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0114","fecha":"2025-10-15","tipo":"Alimentación","detalle":"Comida","monto":25.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0115","fecha":"2025-10-16","tipo":"Otros","detalle":"Intereses","monto":140.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0116","fecha":"2025-10-16","tipo":"Alimentación","detalle":"Desayuno","monto":3.5,"pago":"Visa Signature Interbank"},
+  {"id":"xl0117","fecha":"2025-10-17","tipo":"Alimentación","detalle":"Cena Restaurante","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0118","fecha":"2025-10-17","tipo":"Alimentación","detalle":"Desayuno","monto":7.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0119","fecha":"2025-10-18","tipo":"Alimentación","detalle":"Almuerzo Restaurante","monto":55.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0120","fecha":"2025-10-18","tipo":"Alimentación","detalle":"Cena Restaurante","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0121","fecha":"2025-10-20","tipo":"Servicios","detalle":"Apple Suscripción","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0122","fecha":"2025-10-21","tipo":"Servicios","detalle":"Linea Movil","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0123","fecha":"2025-10-21","tipo":"Alimentación","detalle":"Desayuno","monto":4.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0124","fecha":"2025-10-22","tipo":"Alimentación","detalle":"Antojos","monto":8.5,"pago":"Visa Signature Interbank"},
+  {"id":"xl0125","fecha":"2025-10-23","tipo":"Educación","detalle":"Curso","monto":1128.15,"pago":"Visa Signature Interbank"},
+  {"id":"xl0126","fecha":"2025-10-24","tipo":"Transporte","detalle":"Combustible","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0127","fecha":"2025-10-24","tipo":"Alimentación","detalle":"Comida","monto":35.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0128","fecha":"2025-10-24","tipo":"Alimentación","detalle":"Desayuno","monto":8.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0129","fecha":"2025-10-25","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0130","fecha":"2025-10-25","tipo":"Alimentación","detalle":"Antojos","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0132","fecha":"2025-10-26","tipo":"Alimentación","detalle":"Cena Restaurante","monto":35.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0133","fecha":"2025-10-28","tipo":"Otros","detalle":"Cuota 3 Iphone","monto":600.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0134","fecha":"2025-10-28","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0135","fecha":"2025-10-28","tipo":"Alimentación","detalle":"Desayuno","monto":3.5,"pago":"Visa Signature Interbank"},
+  {"id":"xl0136","fecha":"2025-10-29","tipo":"Alimentación","detalle":"Cena Restaurante","monto":84.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0137","fecha":"2025-10-29","tipo":"Salud","detalle":"SS","monto":13.5,"pago":"Visa Signature Interbank"},
+  {"id":"xl0138","fecha":"2025-10-30","tipo":"Alimentación","detalle":"Desayuno","monto":2.3,"pago":"Visa Signature Interbank"},
+  {"id":"xl0139","fecha":"2025-10-31","tipo":"Ocio / Entretenimiento","detalle":"Pasaje Viaje","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0140","fecha":"2025-10-31","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0141","fecha":"2025-10-31","tipo":"Alimentación","detalle":"Desayuno","monto":7.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0142","fecha":"2025-10-31","tipo":"Transporte","detalle":"Taxi","monto":5.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0143","fecha":"2025-11-01","tipo":"Otros","detalle":"Publicidad","monto":122.5,"pago":"Visa Signature Interbank"},
+  {"id":"xl0144","fecha":"2025-11-01","tipo":"Alimentación","detalle":"Almuerzo Restaurante","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0145","fecha":"2025-11-01","tipo":"Alimentación","detalle":"Almuerzo Restaurante","monto":45.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0146","fecha":"2025-11-01","tipo":"Otros","detalle":"Donación","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0147","fecha":"2025-11-02","tipo":"Servicios","detalle":"Internet","monto":67.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0148","fecha":"2025-11-02","tipo":"Servicios","detalle":"Luz","monto":37.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0149","fecha":"2025-11-02","tipo":"Otros","detalle":"Propina","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0150","fecha":"2025-11-02","tipo":"Servicios","detalle":"Streaming","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0151","fecha":"2025-11-03","tipo":"Otros","detalle":"Ropa","monto":150.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0152","fecha":"2025-11-03","tipo":"Alimentación","detalle":"Comida","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0153","fecha":"2025-11-04","tipo":"Alimentación","detalle":"Comida","monto":17.5,"pago":"Visa Signature Interbank"},
+  {"id":"xl0154","fecha":"2025-11-05","tipo":"Educación","detalle":"Cama","monto":478.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0155","fecha":"2025-11-05","tipo":"Otros","detalle":"Perfume","monto":150.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0156","fecha":"2025-11-05","tipo":"Otros","detalle":"Compras Otros","monto":110.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0157","fecha":"2025-11-05","tipo":"Otros","detalle":"Donación","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0158","fecha":"2025-11-05","tipo":"Alimentación","detalle":"Almuerzo Restaurante","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0159","fecha":"2025-11-07","tipo":"Otros","detalle":"Propina","monto":8.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0160","fecha":"2025-11-08","tipo":"Ocio / Entretenimiento","detalle":"Pasaje Viaje","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0161","fecha":"2025-11-09","tipo":"Otros","detalle":"Donación","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0162","fecha":"2025-11-09","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":80.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0163","fecha":"2025-11-09","tipo":"Otros","detalle":"Propina","monto":8.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0164","fecha":"2025-11-09","tipo":"Alimentación","detalle":"Desayuno","monto":14.5,"pago":"Visa Signature Interbank"},
+  {"id":"xl0165","fecha":"2025-11-10","tipo":"Otros","detalle":"Propina","monto":18.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0166","fecha":"2025-11-10","tipo":"Alimentación","detalle":"Desayuno","monto":4.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0167","fecha":"2025-11-11","tipo":"Servicios","detalle":"Agua","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0168","fecha":"2025-11-11","tipo":"Alimentación","detalle":"Comida","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0169","fecha":"2025-11-11","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0170","fecha":"2025-11-11","tipo":"Educación","detalle":"Crossfit","monto":350.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0171","fecha":"2025-11-11","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0172","fecha":"2025-11-13","tipo":"Educación","detalle":"EAE Business School","monto":2796.5,"pago":"Visa Signature Interbank"},
+  {"id":"xl0173","fecha":"2025-11-13","tipo":"Alimentación","detalle":"Desayuno","monto":2.5,"pago":"Visa Signature Interbank"},
+  {"id":"xl0174","fecha":"2025-11-13","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0175","fecha":"2025-11-14","tipo":"Servicios","detalle":"YT Suscripción","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0176","fecha":"2025-11-14","tipo":"Alimentación","detalle":"Desayuno","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0177","fecha":"2025-11-15","tipo":"Alimentación","detalle":"Comida","monto":35.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0178","fecha":"2025-11-15","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":75.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0179","fecha":"2025-11-15","tipo":"Transporte","detalle":"Taxi","monto":17.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0180","fecha":"2025-11-15","tipo":"Alimentación","detalle":"Cena Restaurante","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0181","fecha":"2025-11-15","tipo":"Alimentación","detalle":"Comida","monto":37.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0182","fecha":"2025-11-16","tipo":"Alimentación","detalle":"Almuerzo Restaurante","monto":80.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0183","fecha":"2025-11-17","tipo":"Alimentación","detalle":"Desayuno","monto":5.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0184","fecha":"2025-11-18","tipo":"Transporte","detalle":"Combustible","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0185","fecha":"2025-11-18","tipo":"Ocio / Entretenimiento","detalle":"Cine","monto":55.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0186","fecha":"2025-11-19","tipo":"Educación","detalle":"Crossfit","monto":210.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0187","fecha":"2025-11-19","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0188","fecha":"2025-11-20","tipo":"Servicios","detalle":"Apple Suscripción","monto":14.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0189","fecha":"2025-11-21","tipo":"Otros","detalle":"Propina","monto":100.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0190","fecha":"2025-11-21","tipo":"Alimentación","detalle":"Cena Restaurante","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0191","fecha":"2025-11-21","tipo":"Alimentación","detalle":"Comida","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0192","fecha":"2025-11-21","tipo":"Servicios","detalle":"Desgravamen","monto":10.43,"pago":"Visa Signature Interbank"},
+  {"id":"xl0193","fecha":"2025-11-22","tipo":"Salud","detalle":"SS","monto":9.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0194","fecha":"2025-11-22","tipo":"Alimentación","detalle":"Comida","monto":14.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0195","fecha":"2025-11-22","tipo":"Transporte","detalle":"Mantenimiento Moto","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0196","fecha":"2025-11-22","tipo":"Servicios","detalle":"Linea Movil","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0197","fecha":"2025-11-23","tipo":"Otros","detalle":"Propina","monto":100.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0198","fecha":"2025-11-23","tipo":"Alimentación","detalle":"Cena Restaurante","monto":122.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0199","fecha":"2025-11-24","tipo":"Alimentación","detalle":"Comida","monto":35.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0200","fecha":"2025-11-25","tipo":"Otros","detalle":"Propina","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0201","fecha":"2025-11-26","tipo":"Alimentación","detalle":"Comida","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0202","fecha":"2025-11-27","tipo":"Salud","detalle":"Corte cabello","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0203","fecha":"2025-11-27","tipo":"Alimentación","detalle":"Comida","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0204","fecha":"2025-11-28","tipo":"Transporte","detalle":"Mantenimiento Moto","monto":42.5,"pago":"Visa Signature Interbank"},
+  {"id":"xl0205","fecha":"2025-11-29","tipo":"Alimentación","detalle":"Cena Restaurante","monto":46.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0206","fecha":"2025-11-29","tipo":"Alimentación","detalle":"Desayuno","monto":7.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0207","fecha":"2025-12-01","tipo":"Salud","detalle":"SS","monto":27.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0208","fecha":"2025-12-01","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0209","fecha":"2025-12-01","tipo":"Otros","detalle":"Publicidad","monto":130.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0210","fecha":"2025-12-01","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0211","fecha":"2025-12-02","tipo":"Servicios","detalle":"Streaming","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0212","fecha":"2025-12-02","tipo":"Salud","detalle":"Crema","monto":26.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0213","fecha":"2025-12-02","tipo":"Alimentación","detalle":"Cena Restaurante","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0214","fecha":"2025-12-02","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0215","fecha":"2025-12-03","tipo":"Alimentación","detalle":"Comida","monto":44.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0216","fecha":"2025-12-04","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0217","fecha":"2025-12-04","tipo":"Alimentación","detalle":"Cena Restaurante","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0218","fecha":"2025-12-05","tipo":"Alimentación","detalle":"Cena Restaurante","monto":43.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0219","fecha":"2025-12-05","tipo":"Servicios","detalle":"Luz","monto":35.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0220","fecha":"2025-12-05","tipo":"Servicios","detalle":"Internet","monto":67.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0221","fecha":"2025-12-06","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":153.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0222","fecha":"2025-12-06","tipo":"Alimentación","detalle":"Almuerzo Restaurante","monto":140.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0223","fecha":"2025-12-06","tipo":"Transporte","detalle":"Combustible","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0224","fecha":"2025-12-06","tipo":"Alimentación","detalle":"Cena Restaurante","monto":14.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0225","fecha":"2025-12-06","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0226","fecha":"2025-12-06","tipo":"Alimentación","detalle":"Desayuno","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0227","fecha":"2025-12-07","tipo":"Otros","detalle":"Propina","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0228","fecha":"2025-12-07","tipo":"Alimentación","detalle":"Antojos","monto":26.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0229","fecha":"2025-12-08","tipo":"Alimentación","detalle":"Cena Restaurante","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0230","fecha":"2025-12-08","tipo":"Alimentación","detalle":"Comida","monto":36.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0231","fecha":"2025-12-10","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0232","fecha":"2025-12-11","tipo":"Salud","detalle":"SS","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0233","fecha":"2025-12-12","tipo":"Educación","detalle":"EAE Business School","monto":2745.9,"pago":"Visa Signature Interbank"},
+  {"id":"xl0234","fecha":"2025-12-12","tipo":"Otros","detalle":"Compras Otros","monto":22.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0235","fecha":"2025-12-12","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0236","fecha":"2025-12-13","tipo":"Alimentación","detalle":"Cena Restaurante","monto":27.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0237","fecha":"2025-12-13","tipo":"Transporte","detalle":"Taxi","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0238","fecha":"2025-12-13","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0239","fecha":"2025-12-13","tipo":"Otros","detalle":"Propina","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0240","fecha":"2025-12-13","tipo":"Otros","detalle":"Compras Otros","monto":125.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0241","fecha":"2025-12-13","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0242","fecha":"2025-12-14","tipo":"Alimentación","detalle":"Almuerzo Restaurante","monto":25.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0243","fecha":"2025-12-14","tipo":"Servicios","detalle":"YT Suscripción","monto":17.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0244","fecha":"2025-12-15","tipo":"Otros","detalle":"Ropa","monto":150.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0245","fecha":"2025-12-15","tipo":"Otros","detalle":"Ropa","monto":100.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0246","fecha":"2025-12-15","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0247","fecha":"2025-12-16","tipo":"Otros","detalle":"Compras Otros","monto":80.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0248","fecha":"2025-12-17","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":18.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0249","fecha":"2025-12-17","tipo":"Alimentación","detalle":"Comida","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0250","fecha":"2025-12-17","tipo":"Alimentación","detalle":"Cena Restaurante","monto":54.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0251","fecha":"2025-12-17","tipo":"Alimentación","detalle":"Desayuno","monto":12.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0252","fecha":"2025-12-19","tipo":"Alimentación","detalle":"Cena Restaurante","monto":12.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0253","fecha":"2025-12-19","tipo":"Servicios","detalle":"Desgravamen","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0254","fecha":"2025-12-20","tipo":"Alimentación","detalle":"Almuerzo Restaurante","monto":60.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0255","fecha":"2025-12-20","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":70.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0256","fecha":"2025-12-20","tipo":"Alimentación","detalle":"Antojos","monto":12.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0257","fecha":"2025-12-21","tipo":"Alimentación","detalle":"Cena Restaurante","monto":36.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0258","fecha":"2025-12-21","tipo":"Ocio / Entretenimiento","detalle":"Pasaje Viaje","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0259","fecha":"2025-12-21","tipo":"Alimentación","detalle":"Almuerzo Restaurante","monto":28.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0260","fecha":"2025-12-21","tipo":"Ocio / Entretenimiento","detalle":"Pasaje Viaje","monto":25.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0261","fecha":"2025-12-21","tipo":"Servicios","detalle":"Apple Suscripción","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0262","fecha":"2025-12-22","tipo":"Servicios","detalle":"Linea Movil","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0263","fecha":"2025-12-23","tipo":"Otros","detalle":"Propina","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0264","fecha":"2025-12-23","tipo":"Otros","detalle":"Compras Otros","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0265","fecha":"2025-12-24","tipo":"Otros","detalle":"Propina","monto":100.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0266","fecha":"2025-12-24","tipo":"Alimentación","detalle":"Almuerzo Restaurante","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0267","fecha":"2025-12-25","tipo":"Alimentación","detalle":"Cena Restaurante","monto":67.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0268","fecha":"2025-12-26","tipo":"Ocio / Entretenimiento","detalle":"Pasaje Viaje","monto":25.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0269","fecha":"2025-12-26","tipo":"Otros","detalle":"Compras Otros","monto":16.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0270","fecha":"2025-12-26","tipo":"Otros","detalle":"Ropa","monto":110.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0271","fecha":"2025-12-26","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0272","fecha":"2025-12-27","tipo":"Transporte","detalle":"Taxi","monto":8.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0273","fecha":"2025-12-27","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0274","fecha":"2025-12-27","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0275","fecha":"2025-12-27","tipo":"Salud","detalle":"SS","monto":5.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0276","fecha":"2025-12-27","tipo":"Salud","detalle":"SS","monto":14.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0277","fecha":"2025-12-27","tipo":"Alimentación","detalle":"Desayuno","monto":8.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0278","fecha":"2025-12-28","tipo":"Alimentación","detalle":"Cena Restaurante","monto":18.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0279","fecha":"2025-12-28","tipo":"Alimentación","detalle":"Almuerzo Restaurante","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0280","fecha":"2025-12-28","tipo":"Alimentación","detalle":"Comida","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0281","fecha":"2025-12-28","tipo":"Salud","detalle":"SS","monto":35.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0282","fecha":"2025-12-28","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0283","fecha":"2025-12-28","tipo":"Transporte","detalle":"Combustible","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0284","fecha":"2025-12-29","tipo":"Alimentación","detalle":"Comida","monto":25.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0285","fecha":"2025-12-30","tipo":"Alimentación","detalle":"Cena Restaurante","monto":16.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0286","fecha":"2025-12-31","tipo":"Alimentación","detalle":"Comida","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0287","fecha":"2025-12-31","tipo":"Alimentación","detalle":"Cena Restaurante","monto":120.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0288","fecha":"2025-12-31","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0289","fecha":"2026-01-01","tipo":"Alimentación","detalle":"Comida","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0290","fecha":"2026-01-01","tipo":"Alimentación","detalle":"Cena Restaurante","monto":35.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0291","fecha":"2026-01-01","tipo":"Alimentación","detalle":"Antojos","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0292","fecha":"2026-01-01","tipo":"Alimentación","detalle":"Comida","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0293","fecha":"2026-01-01","tipo":"Salud","detalle":"SS","monto":7.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0294","fecha":"2026-01-02","tipo":"Servicios","detalle":"Luz","monto":32.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0295","fecha":"2026-01-02","tipo":"Servicios","detalle":"Internet","monto":67.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0296","fecha":"2026-01-02","tipo":"Alimentación","detalle":"Antojos","monto":4.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0297","fecha":"2026-01-02","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0298","fecha":"2026-01-02","tipo":"Servicios","detalle":"Streaming","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0299","fecha":"2026-01-03","tipo":"Alimentación","detalle":"Cena Restaurante","monto":48.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0300","fecha":"2026-01-03","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0301","fecha":"2026-01-03","tipo":"Alimentación","detalle":"Cena Restaurante","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0302","fecha":"2026-01-03","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0303","fecha":"2026-01-03","tipo":"Salud","detalle":"SS","monto":14.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0304","fecha":"2026-01-04","tipo":"Salud","detalle":"SS","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0305","fecha":"2026-01-04","tipo":"Transporte","detalle":"Taxi","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0306","fecha":"2026-01-06","tipo":"Otros","detalle":"Propina","monto":60.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0307","fecha":"2026-01-06","tipo":"Alimentación","detalle":"Desayuno","monto":4.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0308","fecha":"2026-01-07","tipo":"Alimentación","detalle":"Cena Restaurante","monto":17.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0309","fecha":"2026-01-07","tipo":"Alimentación","detalle":"Comida","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0310","fecha":"2026-01-07","tipo":"Alimentación","detalle":"Cena Restaurante","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0311","fecha":"2026-01-08","tipo":"Alimentación","detalle":"Cena Restaurante","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0312","fecha":"2026-01-08","tipo":"Alimentación","detalle":"Desayuno","monto":5.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0313","fecha":"2026-01-08","tipo":"Alimentación","detalle":"Comida","monto":11.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0314","fecha":"2026-01-08","tipo":"Otros","detalle":"Propina","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0315","fecha":"2026-01-09","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0316","fecha":"2026-01-09","tipo":"Alimentación","detalle":"Comida","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0317","fecha":"2026-01-10","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0318","fecha":"2026-01-11","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0319","fecha":"2026-01-11","tipo":"Transporte","detalle":"Combustible","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0320","fecha":"2026-01-12","tipo":"Salud","detalle":"SS","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0321","fecha":"2026-01-12","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0322","fecha":"2026-01-12","tipo":"Alimentación","detalle":"Comida","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0323","fecha":"2026-01-13","tipo":"Alimentación","detalle":"Cena Restaurante","monto":53.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0324","fecha":"2026-01-14","tipo":"Alimentación","detalle":"Desayuno","monto":12.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0325","fecha":"2026-01-14","tipo":"Servicios","detalle":"YT Suscripción","monto":17.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0326","fecha":"2026-01-15","tipo":"Alimentación","detalle":"Desayuno","monto":4.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0327","fecha":"2026-01-15","tipo":"Alimentación","detalle":"Cena Restaurante","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0328","fecha":"2026-01-16","tipo":"Alimentación","detalle":"Desayuno","monto":4.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0329","fecha":"2026-01-16","tipo":"Alimentación","detalle":"Comida","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0330","fecha":"2026-01-17","tipo":"Alimentación","detalle":"Desayuno","monto":4.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0331","fecha":"2026-01-17","tipo":"Alimentación","detalle":"Comida","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0332","fecha":"2026-01-18","tipo":"Otros","detalle":"Propina","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0333","fecha":"2026-01-18","tipo":"Alimentación","detalle":"Almuerzo Restaurante","monto":70.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0334","fecha":"2026-01-18","tipo":"Otros","detalle":"Propina","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0335","fecha":"2026-01-19","tipo":"Otros","detalle":"Propina","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0336","fecha":"2026-01-20","tipo":"Alimentación","detalle":"Comida","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0337","fecha":"2026-01-20","tipo":"Salud","detalle":"SS","monto":14.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0338","fecha":"2026-01-20","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0339","fecha":"2026-01-21","tipo":"Alimentación","detalle":"Comida","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0340","fecha":"2026-01-21","tipo":"Servicios","detalle":"Apple Suscripción","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0341","fecha":"2026-01-22","tipo":"Salud","detalle":"Corte cabello","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0342","fecha":"2026-01-22","tipo":"Otros","detalle":"Donación","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0343","fecha":"2026-01-22","tipo":"Servicios","detalle":"Linea Movil","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0344","fecha":"2026-01-23","tipo":"Alimentación","detalle":"Cena Restaurante","monto":14.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0345","fecha":"2026-01-23","tipo":"Alimentación","detalle":"Cena Restaurante","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0346","fecha":"2026-01-23","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0347","fecha":"2026-01-23","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":18.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0348","fecha":"2026-01-23","tipo":"Servicios","detalle":"Desgravamen","monto":17.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0349","fecha":"2026-01-23","tipo":"Otros","detalle":"Perfume","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0350","fecha":"2026-01-24","tipo":"Alimentación","detalle":"Comida","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0351","fecha":"2026-01-24","tipo":"Alimentación","detalle":"Cena Restaurante","monto":78.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0352","fecha":"2026-01-25","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0353","fecha":"2026-01-25","tipo":"Alimentación","detalle":"Comida","monto":13.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0354","fecha":"2026-01-25","tipo":"Transporte","detalle":"Taxi","monto":14.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0355","fecha":"2026-01-25","tipo":"Salud","detalle":"SS","monto":21.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0356","fecha":"2026-01-26","tipo":"Educación","detalle":"Educación Lu","monto":350.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0357","fecha":"2026-01-26","tipo":"Otros","detalle":"Donación","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0358","fecha":"2026-01-26","tipo":"Alimentación","detalle":"Comida","monto":8.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0359","fecha":"2026-01-26","tipo":"Otros","detalle":"Familia","monto":125.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0360","fecha":"2026-01-26","tipo":"Alimentación","detalle":"Comida","monto":12.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0361","fecha":"2026-01-26","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0362","fecha":"2026-01-27","tipo":"Alimentación","detalle":"Cena Restaurante","monto":32.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0363","fecha":"2026-01-27","tipo":"Salud","detalle":"SS","monto":14.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0364","fecha":"2026-01-27","tipo":"Alimentación","detalle":"Desayuno","monto":4.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0365","fecha":"2026-01-28","tipo":"Alimentación","detalle":"Comida","monto":11.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0366","fecha":"2026-01-29","tipo":"Alimentación","detalle":"Cena Restaurante","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0367","fecha":"2026-01-29","tipo":"Alimentación","detalle":"Antojos","monto":8.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0368","fecha":"2026-01-29","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0369","fecha":"2026-01-29","tipo":"Transporte","detalle":"Combustible","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0370","fecha":"2026-01-29","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0371","fecha":"2026-01-30","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0372","fecha":"2026-01-31","tipo":"Alimentación","detalle":"Cena Restaurante","monto":75.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0373","fecha":"2026-01-31","tipo":"Otros","detalle":"Malu","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0374","fecha":"2026-01-31","tipo":"Salud","detalle":"SS","monto":13.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0375","fecha":"2026-02-01","tipo":"Ocio / Entretenimiento","detalle":"Antojos","monto":5.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0376","fecha":"2026-02-01","tipo":"Transporte","detalle":"Taxi","monto":8.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0377","fecha":"2026-02-01","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":52.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0378","fecha":"2026-02-02","tipo":"Alimentación","detalle":"Comida","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0379","fecha":"2026-02-02","tipo":"Alimentación","detalle":"Comida","monto":11.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0380","fecha":"2026-02-02","tipo":"Otros","detalle":"Cuarto-Malu","monto":150.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0381","fecha":"2026-02-02","tipo":"Servicios","detalle":"Luz","monto":35.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0382","fecha":"2026-02-03","tipo":"Otros","detalle":"Malu","monto":75.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0383","fecha":"2026-02-03","tipo":"Alimentación","detalle":"Cena Restaurante","monto":28.5,"pago":"Visa Signature Interbank"},
+  {"id":"xl0384","fecha":"2026-02-03","tipo":"Ocio / Entretenimiento","detalle":"Antojos","monto":5.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0385","fecha":"2026-02-03","tipo":"Alimentación","detalle":"Desayuno","monto":5.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0386","fecha":"2026-02-03","tipo":"Transporte","detalle":"Mantenimiento Moto","monto":85.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0387","fecha":"2026-02-04","tipo":"Servicios","detalle":"Streaming","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0388","fecha":"2026-02-04","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0389","fecha":"2026-02-05","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0390","fecha":"2026-02-05","tipo":"Alimentación","detalle":"Almuerzo Restaurante","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0391","fecha":"2026-02-05","tipo":"Salud","detalle":"SS","monto":28.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0392","fecha":"2026-02-06","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0393","fecha":"2026-02-06","tipo":"Servicios","detalle":"Internet","monto":67.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0394","fecha":"2026-02-07","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0395","fecha":"2026-02-07","tipo":"Ocio / Entretenimiento","detalle":"Pasaje Viaje","monto":70.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0396","fecha":"2026-02-10","tipo":"Alimentación","detalle":"Comida","monto":35.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0397","fecha":"2026-02-10","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0398","fecha":"2026-02-10","tipo":"Alimentación","detalle":"Desayuno","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0399","fecha":"2026-02-11","tipo":"Alimentación","detalle":"Cena Restaurante","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0400","fecha":"2026-02-11","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0401","fecha":"2026-02-11","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0402","fecha":"2026-02-12","tipo":"Alimentación","detalle":"Cena Restaurante","monto":42.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0403","fecha":"2026-02-12","tipo":"Alimentación","detalle":"Comida","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0404","fecha":"2026-02-12","tipo":"Alimentación","detalle":"Comida","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0405","fecha":"2026-02-12","tipo":"Ocio / Entretenimiento","detalle":"Cine","monto":21.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0406","fecha":"2026-02-13","tipo":"Transporte","detalle":"Combustible","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0407","fecha":"2026-02-13","tipo":"Otros","detalle":"Propina","monto":100.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0408","fecha":"2026-02-14","tipo":"Alimentación","detalle":"Desayuno","monto":8.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0409","fecha":"2026-02-14","tipo":"Transporte","detalle":"Taxi","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0410","fecha":"2026-02-14","tipo":"Alimentación","detalle":"Comida","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0411","fecha":"2026-02-14","tipo":"Otros","detalle":"Malu","monto":42.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0412","fecha":"2026-02-14","tipo":"Otros","detalle":"Concierto","monto":115.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0413","fecha":"2026-02-15","tipo":"Alimentación","detalle":"Almuerzo Restaurante","monto":86.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0414","fecha":"2026-02-16","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0415","fecha":"2026-02-16","tipo":"Transporte","detalle":"Mantenimiento Moto","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0416","fecha":"2026-02-16","tipo":"Transporte","detalle":"Taxi","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0417","fecha":"2026-02-17","tipo":"Salud","detalle":"SS","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0418","fecha":"2026-02-17","tipo":"Transporte","detalle":"Mantenimiento Moto","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0419","fecha":"2026-02-17","tipo":"Alimentación","detalle":"Desayuno","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0420","fecha":"2026-02-18","tipo":"Alimentación","detalle":"Almuerzo Restaurante","monto":38.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0421","fecha":"2026-02-18","tipo":"Alimentación","detalle":"Comida","monto":12.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0422","fecha":"2026-02-18","tipo":"Alimentación","detalle":"Desayuno","monto":5.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0423","fecha":"2026-02-19","tipo":"Alimentación","detalle":"Cena Restaurante","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0424","fecha":"2026-02-19","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0425","fecha":"2026-02-20","tipo":"Servicios","detalle":"Apple Suscripción","monto":14.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0426","fecha":"2026-02-20","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0427","fecha":"2026-02-20","tipo":"Alimentación","detalle":"Almuerzo Restaurante","monto":36.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0428","fecha":"2026-02-21","tipo":"Salud","detalle":"SS","monto":42.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0429","fecha":"2026-02-21","tipo":"Alimentación","detalle":"Comida","monto":32.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0430","fecha":"2026-02-21","tipo":"Servicios","detalle":"Linea Movil","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0431","fecha":"2026-02-21","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0432","fecha":"2026-02-22","tipo":"Alimentación","detalle":"Familia","monto":66.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0433","fecha":"2026-02-22","tipo":"Otros","detalle":"Compras Otros","monto":60.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0434","fecha":"2026-02-22","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0435","fecha":"2026-02-22","tipo":"Alimentación","detalle":"Almuerzo Restaurante","monto":32.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0436","fecha":"2026-02-23","tipo":"Alimentación","detalle":"Comida","monto":9.6,"pago":"Visa Signature Interbank"},
+  {"id":"xl0437","fecha":"2026-02-23","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0438","fecha":"2026-02-24","tipo":"Alimentación","detalle":"Cena Restaurante","monto":18.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0439","fecha":"2026-02-24","tipo":"Alimentación","detalle":"Comida","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0440","fecha":"2026-02-24","tipo":"Salud","detalle":"Corte cabello","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0441","fecha":"2026-02-24","tipo":"Alimentación","detalle":"Desayuno","monto":5.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0442","fecha":"2026-02-25","tipo":"Alimentación","detalle":"Comida","monto":18.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0443","fecha":"2026-02-25","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0444","fecha":"2026-02-25","tipo":"Transporte","detalle":"Mantenimiento Moto","monto":14.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0445","fecha":"2026-02-26","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0446","fecha":"2026-02-27","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0447","fecha":"2026-02-27","tipo":"Alimentación","detalle":"Comida","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0448","fecha":"2026-02-27","tipo":"Otros","detalle":"Malu","monto":7.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0449","fecha":"2026-02-27","tipo":"Alimentación","detalle":"Desayuno","monto":4.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0450","fecha":"2026-02-27","tipo":"Otros","detalle":"Malu","monto":22.5,"pago":"Visa Signature Interbank"},
+  {"id":"xl0451","fecha":"2026-02-27","tipo":"Otros","detalle":"Malu","monto":18.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0452","fecha":"2026-02-28","tipo":"Otros","detalle":"Malu","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0453","fecha":"2026-02-28","tipo":"Alimentación","detalle":"Comida","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0454","fecha":"2026-02-28","tipo":"Alimentación","detalle":"Comida","monto":22.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0455","fecha":"2026-02-28","tipo":"Alimentación","detalle":"Familia","monto":54.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0456","fecha":"2026-02-28","tipo":"Otros","detalle":"Malu","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0457","fecha":"2026-02-28","tipo":"Otros","detalle":"Malu","monto":27.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0458","fecha":"2026-02-28","tipo":"Alimentación","detalle":"Familia","monto":19.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0459","fecha":"2026-03-01","tipo":"Otros","detalle":"Cuarto-Malu","monto":150.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0460","fecha":"2026-03-01","tipo":"Otros","detalle":"Malu","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0461","fecha":"2026-03-01","tipo":"Otros","detalle":"Malu","monto":16.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0462","fecha":"2026-03-01","tipo":"Servicios","detalle":"Luz","monto":36.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0463","fecha":"2026-03-01","tipo":"Servicios","detalle":"Internet","monto":67.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0464","fecha":"2026-03-01","tipo":"Otros","detalle":"Malu","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0465","fecha":"2026-03-03","tipo":"Alimentación","detalle":"Cena Restaurante","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0466","fecha":"2026-03-03","tipo":"Salud","detalle":"SS","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0467","fecha":"2026-03-03","tipo":"Alimentación","detalle":"Comida","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0468","fecha":"2026-03-03","tipo":"Alimentación","detalle":"Comida","monto":11.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0469","fecha":"2026-03-03","tipo":"Otros","detalle":"Malu","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0470","fecha":"2026-03-04","tipo":"Transporte","detalle":"Taxi","monto":5.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0471","fecha":"2026-03-04","tipo":"Servicios","detalle":"Streaming","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0472","fecha":"2026-03-04","tipo":"Transporte","detalle":"Taxi","monto":5.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0473","fecha":"2026-03-04","tipo":"Transporte","detalle":"Combustible","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0474","fecha":"2026-03-04","tipo":"Transporte","detalle":"Mantenimiento Moto","monto":46.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0475","fecha":"2026-03-05","tipo":"Alimentación","detalle":"Comida","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0476","fecha":"2026-03-05","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0477","fecha":"2026-03-06","tipo":"Alimentación","detalle":"Comida","monto":11.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0478","fecha":"2026-03-06","tipo":"Alimentación","detalle":"Cena Restaurante","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0479","fecha":"2026-03-06","tipo":"Alimentación","detalle":"Desayuno","monto":5.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0480","fecha":"2026-03-07","tipo":"Ocio / Entretenimiento","detalle":"Pasaje Viaje","monto":70.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0481","fecha":"2026-03-07","tipo":"Alimentación","detalle":"Familia","monto":36.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0482","fecha":"2026-03-07","tipo":"Alimentación","detalle":"Comida","monto":12.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0483","fecha":"2026-03-07","tipo":"Alimentación","detalle":"Desayuno","monto":11.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0484","fecha":"2026-03-08","tipo":"Otros","detalle":"Donación","monto":20.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0485","fecha":"2026-03-09","tipo":"Alimentación","detalle":"Comida","monto":25.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0486","fecha":"2026-03-09","tipo":"Otros","detalle":"Ropa","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0487","fecha":"2026-03-09","tipo":"Alimentación","detalle":"Comida","monto":11.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0488","fecha":"2026-03-09","tipo":"Alimentación","detalle":"Desayuno","monto":6.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0489","fecha":"2026-03-10","tipo":"Alimentación","detalle":"Cena Restaurante","monto":80.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0490","fecha":"2026-03-11","tipo":"Servicios","detalle":"PedidosYa","monto":9.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0491","fecha":"2026-03-11","tipo":"Transporte","detalle":"Combustible","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0492","fecha":"2026-03-12","tipo":"Otros","detalle":"Propina","monto":100.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0493","fecha":"2026-03-13","tipo":"Alimentación","detalle":"Cena Restaurante","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0494","fecha":"2026-03-14","tipo":"Alimentación","detalle":"Desayuno","monto":4.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0495","fecha":"2026-03-14","tipo":"Servicios","detalle":"YT Suscripción","monto":14.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0496","fecha":"2026-03-14","tipo":"Otros","detalle":"Malu","monto":17.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0497","fecha":"2026-03-14","tipo":"Ocio / Entretenimiento","detalle":"Pasaje Viaje","monto":70.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0498","fecha":"2026-03-16","tipo":"Salud","detalle":"SS","monto":28.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0499","fecha":"2026-03-16","tipo":"Alimentación","detalle":"Comida","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0500","fecha":"2026-03-17","tipo":"Alimentación","detalle":"Comida","monto":11.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0501","fecha":"2026-03-17","tipo":"Alimentación","detalle":"Familia","monto":51.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0502","fecha":"2026-03-17","tipo":"Alimentación","detalle":"Comida","monto":22.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0503","fecha":"2026-03-18","tipo":"Alimentación","detalle":"Comida","monto":11.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0504","fecha":"2026-03-18","tipo":"Servicios","detalle":"Linea Movil","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0505","fecha":"2026-03-18","tipo":"Alimentación","detalle":"Comida","monto":11.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0506","fecha":"2026-03-19","tipo":"Alimentación","detalle":"Cena Restaurante","monto":10.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0507","fecha":"2026-03-19","tipo":"Alimentación","detalle":"Comida","monto":11.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0508","fecha":"2026-03-21","tipo":"Otros","detalle":"Ropa","monto":95.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0509","fecha":"2026-03-21","tipo":"Otros","detalle":"Familia","monto":140.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0510","fecha":"2026-03-21","tipo":"Otros","detalle":"Zapatillas","monto":150.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0511","fecha":"2026-03-21","tipo":"Transporte","detalle":"Taxi","monto":25.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0512","fecha":"2026-03-21","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":82.33,"pago":"Visa Signature Interbank"},
+  {"id":"xl0513","fecha":"2026-03-21","tipo":"Alimentación","detalle":"Comida","monto":11.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0514","fecha":"2026-03-22","tipo":"Otros","detalle":"Sandalias","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0515","fecha":"2026-03-22","tipo":"Alimentación","detalle":"Cena Restaurante","monto":14.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0516","fecha":"2026-03-22","tipo":"Alimentación","detalle":"Comida","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0517","fecha":"2026-03-24","tipo":"Otros","detalle":"Desgravamen","monto":8.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0518","fecha":"2026-03-24","tipo":"Alimentación","detalle":"Desayuno","monto":5.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0519","fecha":"2026-03-24","tipo":"Ocio / Entretenimiento","detalle":"Antojos","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0520","fecha":"2026-03-25","tipo":"Alimentación","detalle":"Comida","monto":11.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0521","fecha":"2026-03-25","tipo":"Servicios","detalle":"Agua","monto":30.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0522","fecha":"2026-03-26","tipo":"Salud","detalle":"SS","monto":13.5,"pago":"Visa Signature Interbank"},
+  {"id":"xl0523","fecha":"2026-03-27","tipo":"Alimentación","detalle":"Cena Restaurante","monto":51.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0524","fecha":"2026-03-28","tipo":"Otros","detalle":"Malu","monto":19.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0525","fecha":"2026-03-30","tipo":"Alimentación","detalle":"Cena Restaurante","monto":18.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0526","fecha":"2026-03-30","tipo":"Salud","detalle":"SS","monto":13.5,"pago":"Visa Signature Interbank"},
+  {"id":"xl0527","fecha":"2026-03-30","tipo":"Alimentación","detalle":"Desayuno","monto":5.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0528","fecha":"2026-04-01","tipo":"Ocio / Entretenimiento","detalle":"Pasaje Viaje","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0529","fecha":"2026-04-01","tipo":"Servicios","detalle":"Internet","monto":67.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0530","fecha":"2026-04-01","tipo":"Alimentación","detalle":"Desayuno","monto":4.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0531","fecha":"2026-03-27","tipo":"Alimentación","detalle":"Almuerzo Restaurante","monto":24.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0532","fecha":"2026-03-25","tipo":"Alimentación","detalle":"Comida","monto":11.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0533","fecha":"2026-03-29","tipo":"Otros","detalle":"Propina","monto":50.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0534","fecha":"2026-03-29","tipo":"Alimentación","detalle":"Comida","monto":40.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0535","fecha":"2026-04-02","tipo":"Otros","detalle":"Malu","monto":150.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0536","fecha":"2026-04-02","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":85.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0537","fecha":"2026-04-04","tipo":"Servicios","detalle":"Streaming","monto":15.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0538","fecha":"2026-04-04","tipo":"Alimentación","detalle":"Comida","monto":27.0,"pago":"Visa Signature Interbank"},
+  {"id":"xl0539","fecha":"2026-04-04","tipo":"Ocio / Entretenimiento","detalle":"Salida Bebida","monto":24.0,"pago":"Visa Signature Interbank"}
+];
+
+// Gastos del usuario (localStorage)
+let gastos = [];
+let editId = null;
+let currentEsc = 'base';
+
+function loadData(){
+  const raw = localStorage.getItem('javier_gastos');
+  if(raw) gastos = JSON.parse(raw);
+  else gastos = [...HIST_PREVIO];
+  // Asegurar historial previo siempre incluido
+  HIST_PREVIO.forEach(h=>{
+    if(!gastos.find(g=>g.id===h.id)) gastos.unshift(h);
+  });
+}
+
+function saveData(){
+  localStorage.setItem('javier_gastos', JSON.stringify(gastos));
+}
+
+// ============================================================
+// FLUJO DE CAJA
+// ============================================================
+const MESES_FLUJO = [
+  'Abr 26','May 26','Jun 26','Jul 26','Ago 26','Set 26',
+  'Oct 26','Nov 26','Dic 26','Ene 27','Feb 27','Mar 27','Abr 27',
+  'May 27','Jun 27','Jul 27','Ago 27','Set 27','Oct 27','Nov 27','Dic 27'
+];
+const MESES_KEY = [
+  '2026-04','2026-05','2026-06','2026-07','2026-08','2026-09',
+  '2026-10','2026-11','2026-12','2027-01','2027-02','2027-03','2027-04',
+  '2027-05','2027-06','2027-07','2027-08','2027-09','2027-10','2027-11','2027-12'
+];
+
+const ESC_CFG = {
+  base:{
+    extras:[0,2000,0,4360,0,0,0,2000,4360,0,0,0,0, 2000,0,4360,0,0,0,2000,4360],
+    gesp:  [0,0,0,3200,0,0,23000,0,0,0,5000,0,15000, 0,0,0,0,0,0,0,0],
+    ev:['Ahorro activo','CTS mayo S/2,000','','Gratif. PP + pasaje Madrid','','','Pago máster · inicio online','CTS noviembre S/2,000','Gratif. Navidad S/4,360','','Viaje residencial + tour 15d','Retorno Perú','Extracash S/15k → vehículo','CTS mayo S/2,000','','Gratif. julio S/4,360','','','','CTS nov S/2,000','Gratif. Navidad S/4,360']
+  },
+  opt:{
+    extras:[2500,2000,0,4360,0,0,0,2000,4360,0,0,0,0, 2000,0,4360,0,0,0,2000,4360],
+    gesp:  [0,0,0,3000,0,0,23000,0,0,0,5000,0,15000, 0,0,0,0,0,0,0,0],
+    ev:['Utilidades S/2,500','CTS mayo S/2,000','','Gratif. PP + pasaje Madrid','','','Pago máster · inicio online','CTS noviembre S/2,000','Gratif. Navidad S/4,360','','Viaje residencial + tour 15d','Retorno Perú','Extracash S/15k → vehículo','CTS mayo S/2,000','','Gratif. julio S/4,360','','','','CTS nov S/2,000','Gratif. Navidad S/4,360']
+  },
+  cons:{
+    extras:[0,2000,0,4360,0,0,0,2000,4360,0,0,0,0, 2000,0,4360,0,0,0,2000,4360],
+    gesp:  [0,0,0,3800,0,0,23000,0,0,0,5000,0,0, 0,0,0,0,0,0,0,0],
+    ev:['Ahorro activo','CTS mayo S/2,000','','Gratif. PP + pasaje S/3,800','','','Pago máster · inicio online','CTS noviembre S/2,000','Gratif. Navidad S/4,360','','Viaje residencial + tour 15d','Retorno Perú','Sin vehículo aún — evaluar','CTS mayo S/2,000','','Gratif. julio S/4,360','','','','CTS nov S/2,000','Gratif. Navidad S/4,360']
+  }
+};
+
+function fmt(n){ return 'S/ '+Math.round(n).toLocaleString('es-PE'); }
+
+function renderFlujo(){
+  const NETO = +document.getElementById('p-neto').value || 3400;
+  const GASTOS_BASE = +document.getElementById('p-gastos').value || 1700;
+  const INIT = +document.getElementById('p-init').value || 7500;
+  const MASTER = +document.getElementById('p-master').value || 23000;
+  const TOUR = +document.getElementById('p-tour').value || 5000;
+
+  const c = ESC_CFG[currentEsc];
+  // Actualizar gasto de tour en el escenario
+  const CARRO = +document.getElementById('p-carro').value || 0;
+  const gespArr = [...c.gesp];
+  gespArr[10] = TOUR; // feb 2027
+  // Carro: se aplica al mes seleccionado en p-carro-mes (índice 0-20)
+  const CARRO_IDX = +document.getElementById('p-carro-mes').value;
+  if(CARRO > 0 && CARRO_IDX >= 0 && CARRO_IDX < 21) gespArr[CARRO_IDX] = (gespArr[CARRO_IDX]||0) + CARRO;
+
+  let acum = INIT;
+  let masterDone = false;
+  let masterMes = null;
+  let rows = '';
+
+  // Obtener gastos reales por mes
+  const gastosRealesMes = {};
+  gastos.forEach(g=>{
+    const k = g.fecha.substring(0,7);
+    gastosRealesMes[k] = (gastosRealesMes[k]||0) + g.monto;
+  });
+
+  for(let i=0;i<21;i++){
+    const k = MESES_KEY[i];
+    const esHistorial = i < 0; // todos desde abril son proyección
+    const ing = NETO + c.extras[i];
+    // Para meses pasados o actuales, usar gasto real si existe
+    const gastosReales = gastosRealesMes[k] || 0;
+    const vidaReal = (k <= '2026-04' && gastosReales > 0) ? gastosReales : GASTOS_BASE;
+    const gast = vidaReal + gespArr[i];
+    const flujo = ing - gast;
+    acum += flujo;
+
+    const fondo = Math.max(0, Math.min(acum, MASTER));
+    let rc = '';
+    if(!masterDone && gespArr[i] >= 20000){ masterDone=true; masterMes=MESES_FLUJO[i]; rc='row-master'; }
+    else if(gespArr[i] >= 14000){ rc='row-auto'; }
+    else if(gespArr[i] >= 4500){ rc='row-viaje'; }
+    else if(gespArr[i] >= 2800 && i<=3){ rc='row-pasaje'; }
+
+    const fc = flujo>=0?'pos':'neg';
+    const ac = acum>=0?'pos':'neg';
+    const fondoTxt = masterDone && i >= MESES_FLUJO.indexOf(masterMes) ? fmt(MASTER) : fmt(fondo);
+
+    rows += `<tr class="${rc}">
+      <td class="bold">${MESES_FLUJO[i]}</td>
+      <td class="r">${fmt(NETO)}</td>
+      <td class="r">${c.extras[i]>0?fmt(c.extras[i]):'-'}</td>
+      <td class="r bold">${fmt(ing)}</td>
+      <td class="r">${fmt(vidaReal)}</td>
+      <td class="r">${gespArr[i]>0?'('+fmt(gespArr[i])+')':'-'}</td>
+      <td class="${fc}">${fmt(flujo)}</td>
+      <td class="${ac}">${fmt(acum)}</td>
+      <td class="r">${fondoTxt}</td>
+      <td style="font-size:11px;color:var(--text2)">${c.ev[i]}</td>
+    </tr>`;
+  }
+
+  document.getElementById('flujo-body').innerHTML = rows;
+
+  // KPIs
+  document.getElementById('kpi-ahorro').textContent = fmt(INIT);
+  document.getElementById('kpi-falta').textContent = fmt(MASTER);
+  document.getElementById('kpi-master-mes').textContent = masterMes || 'Octubre 2026';
+  document.getElementById('kpi-master-sub').textContent = masterMes ? 'Objetivo alcanzado' : 'Límite: oct 2026';
+
+  // Saldo al final (abr 2027) — recalcular
+  let acum2 = INIT;
+  for(let i=0;i<21;i++){
+    const ing = NETO + c.extras[i];
+    const gast = GASTOS_BASE + gespArr[i];
+    acum2 += ing - gast;
+  }
+  const kpiFinal = document.getElementById('kpi-saldo-final');
+  kpiFinal.textContent = fmt(acum2);
+  kpiFinal.style.color = acum2 >= 0 ? 'var(--green)' : 'var(--red)';
+}
+
+function setEsc(e){
+  currentEsc = e;
+  ['base','opt','cons'].forEach(x=>{
+    const el = document.getElementById('esc-'+x);
+    el.style.background = x===e ? 'var(--blue)' : '';
+    el.style.color = x===e ? 'white' : '';
+    el.style.borderColor = x===e ? 'var(--blue)' : '';
+  });
+  renderFlujo();
+}
+
+// ============================================================
+// REGISTRO DE GASTOS
+// ============================================================
+function openModal(id){
+  editId = id || null;
+  const today = new Date().toISOString().split('T')[0];
+  if(id){
+    const g = gastos.find(x=>x.id===id);
+    document.getElementById('modal-title').textContent = 'Editar gasto';
+    document.getElementById('g-fecha').value = g.fecha;
+    document.getElementById('g-monto').value = g.monto;
+    document.getElementById('g-tipo').value = g.tipo;
+    document.getElementById('g-pago').value = g.pago;
+    document.getElementById('g-detalle').value = g.detalle;
+  } else {
+    document.getElementById('modal-title').textContent = 'Nuevo gasto';
+    document.getElementById('g-fecha').value = today;
+    document.getElementById('g-monto').value = '';
+    document.getElementById('g-tipo').value = 'Alimentación';
+    document.getElementById('g-pago').value = 'Visa Signature Interbank';
+    document.getElementById('g-detalle').value = '';
+  }
+  document.getElementById('modal').classList.add('open');
+  setTimeout(()=>document.getElementById('g-monto').focus(),100);
+}
+
+function closeModal(){
+  document.getElementById('modal').classList.remove('open');
+  editId = null;
+}
+
+function guardarGasto(){
+  const fecha = document.getElementById('g-fecha').value;
+  const monto = parseFloat(document.getElementById('g-monto').value);
+  const tipo = document.getElementById('g-tipo').value;
+  const pago = document.getElementById('g-pago').value;
+  const detalle = document.getElementById('g-detalle').value.trim();
+  if(!fecha||!monto||isNaN(monto)||monto<=0){ alert('Completa fecha y monto válido.'); return; }
+
+  if(editId){
+    const idx = gastos.findIndex(x=>x.id===editId);
+    gastos[idx] = {id:editId,fecha,tipo,detalle,monto,pago};
+  } else {
+    gastos.push({id:'g'+Date.now(),fecha,tipo,detalle,monto,pago});
+  }
+  saveData();
+  closeModal();
+  renderGastos();
+  renderDashboard();
+  renderFlujo();
+}
+
+function eliminarGasto(id){
+  if(HIST_PREVIO.find(h=>h.id===id)){ alert('Los registros de historial no se pueden eliminar.'); return; }
+  if(!confirm('¿Eliminar este gasto?')) return;
+  gastos = gastos.filter(g=>g.id!==id);
+  saveData();
+  renderGastos();
+  renderDashboard();
+}
+
+function getCatClass(tipo){
+  if(tipo.includes('Alim')) return 'cat-alim';
+  if(tipo.includes('Trans')) return 'cat-trans';
+  if(tipo.includes('Serv')) return 'cat-serv';
+  if(tipo.includes('Ocio')||tipo.includes('Entret')) return 'cat-ocio';
+  if(tipo.includes('Salud')) return 'cat-salud';
+  if(tipo.includes('Educ')) return 'cat-educ';
+  if(tipo.includes('Aho')||tipo.includes('Invers')) return 'cat-aho';
+  return 'cat-otros';
+}
+
+function renderGastos(){
+  const mes = document.getElementById('filtro-mes').value;
+  const tipo = document.getElementById('filtro-tipo').value;
+  const buscar = document.getElementById('filtro-buscar').value.toLowerCase();
+
+  let filtrados = gastos.filter(g=>{
+    if(mes && !g.fecha.startsWith(mes)) return false;
+    if(tipo && g.tipo !== tipo) return false;
+    if(buscar && !g.detalle.toLowerCase().includes(buscar) && !g.tipo.toLowerCase().includes(buscar)) return false;
+    return true;
+  }).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+
+  const total = filtrados.reduce((s,g)=>s+g.monto,0);
+  const count = filtrados.length;
+  const GASTOS_MES_BASE = +document.getElementById('p-gastos').value || 1700;
+
+  // Resumen del mes
+  const cats = {};
+  filtrados.forEach(g=>{ cats[g.tipo]=(cats[g.tipo]||0)+g.monto; });
+  const topCat = Object.entries(cats).sort((a,b)=>b[1]-a[1])[0];
+
+  document.getElementById('resumen-mes-gastos').innerHTML = `
+    <div class="metric"><div class="metric-label">Total gastado</div><div class="metric-val" style="color:${total>GASTOS_MES_BASE?'var(--red)':'var(--green)'}">${fmt(total)}</div><div class="metric-sub">vs presupuesto S/1,700</div></div>
+    <div class="metric"><div class="metric-label">Categoría principal</div><div class="metric-val" style="font-size:14px">${topCat?topCat[0]:'—'}</div><div class="metric-sub">${topCat?fmt(topCat[1]):''}</div></div>
+    <div class="metric"><div class="metric-label">Transacciones</div><div class="metric-val">${count}</div><div class="metric-sub">registros</div></div>
+    <div class="metric"><div class="metric-label">Promedio por gasto</div><div class="metric-val" style="font-size:16px">${count>0?fmt(total/count):'—'}</div><div class="metric-sub">&nbsp;</div></div>
+  `;
+
+  const mesNombre = mes ? document.getElementById('filtro-mes').options[document.getElementById('filtro-mes').selectedIndex].text : 'todos los meses';
+  document.getElementById('gastos-titulo').textContent = `Gastos · ${mesNombre} (${count} registros · ${fmt(total)})`;
+
+  const isHist = (id) => !!HIST_PREVIO.find(h=>h.id===id);
+
+  if(filtrados.length===0){
+    document.getElementById('gastos-body').innerHTML='';
+    document.getElementById('gastos-empty').style.display='block';
+  } else {
+    document.getElementById('gastos-empty').style.display='none';
+    document.getElementById('gastos-body').innerHTML = filtrados.map(g=>`
+      <tr>
+        <td>${g.fecha}</td>
+        <td><span class="tag ${getCatClass(g.tipo)}">${g.tipo}</span></td>
+        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${g.detalle||'—'}</td>
+        <td class="r bold">${fmt(g.monto)}</td>
+        <td style="font-size:11px;color:var(--text2)">${g.pago}</td>
+        <td>
+          <div class="flex-gap">
+            ${!isHist(g.id)?`<button class="btn btn-sm" onclick="openModal('${g.id}')">Editar</button>`:'<span style="font-size:10px;color:var(--text3)">historial</span>'}
+            ${!isHist(g.id)?`<button class="btn btn-danger btn-sm" onclick="eliminarGasto('${g.id}')">✕</button>`:''}
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+}
+
+function limpiarFiltros(){
+  document.getElementById('filtro-mes').value='2026-04';
+  document.getElementById('filtro-tipo').value='';
+  document.getElementById('filtro-buscar').value='';
+  renderGastos();
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDashboard(){
+  const mes = document.getElementById('dash-mes').value;
+  const filtrados = gastos.filter(g=>g.fecha.startsWith(mes));
+  const total = filtrados.reduce((s,g)=>s+g.monto,0);
+
+  document.getElementById('dash-total-label').textContent = `Total: ${fmt(total)}`;
+
+  // Por categoría
+  const cats = {};
+  CATS.forEach(c=>cats[c]=0);
+  filtrados.forEach(g=>{
+    const cat = CATS.find(c=>g.tipo.includes(c.split(' ')[0])) || 'Otros';
+    cats[cat] = (cats[cat]||0) + g.monto;
+  });
+  const maxCat = Math.max(...Object.values(cats), 1);
+  document.getElementById('chart-cats').innerHTML = Object.entries(cats)
+    .filter(([,v])=>v>0)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([k,v],i)=>`
+      <div class="bar-row">
+        <div class="bar-label">${k.split('/')[0].trim()}</div>
+        <div class="bar-track">
+          <div class="bar-fill-inner" style="width:${Math.round(v/maxCat*100)}%;background:${CAT_COLORS[CATS.indexOf(k)]||'#888'}"></div>
+        </div>
+        <div class="bar-val">${fmt(v)}</div>
+      </div>`).join('') || '<div style="color:var(--text3);font-size:12px;padding:10px 0">Sin datos</div>';
+
+  // Por pago
+  const pagos = {};
+  filtrados.forEach(g=>{ pagos[g.pago]=(pagos[g.pago]||0)+g.monto; });
+  const maxPago = Math.max(...Object.values(pagos), 1);
+  const pagoColors = ['#1a5fa8','#2d7a3a','#b06010','#5a3db0','#888'];
+  document.getElementById('chart-pago').innerHTML = Object.entries(pagos)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([k,v],i)=>`
+      <div class="bar-row">
+        <div class="bar-label" style="font-size:10px">${k.length>12?k.substring(0,12)+'…':k}</div>
+        <div class="bar-track">
+          <div class="bar-fill-inner" style="width:${Math.round(v/maxPago*100)}%;background:${pagoColors[i]||'#888'}"></div>
+        </div>
+        <div class="bar-val">${fmt(v)}</div>
+      </div>`).join('') || '<div style="color:var(--text3);font-size:12px;padding:10px 0">Sin datos</div>';
+
+  // Métricas
+  const topCat = Object.entries(cats).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('dash-total').innerHTML = `<div class="metric-label">Total gastado</div><div class="metric-val" style="color:${total>1700?'var(--red)':'var(--green)'}">${fmt(total)}</div><div class="metric-sub">Presupuesto S/ 1,700</div>`;
+  document.getElementById('dash-mayor-cat').innerHTML = `<div class="metric-label">Mayor categoría</div><div class="metric-val" style="font-size:14px">${topCat&&topCat[1]>0?topCat[0]:'—'}</div><div class="metric-sub">${topCat&&topCat[1]>0?fmt(topCat[1]):''}</div>`;
+  document.getElementById('dash-transacciones').innerHTML = `<div class="metric-label">Transacciones</div><div class="metric-val">${filtrados.length}</div><div class="metric-sub">${mes}</div>`;
+
+  // Histórico
+  const mesesHist = [...new Set(gastos.map(g=>g.fecha.substring(0,7)))].sort();
+  if(mesesHist.length===0){
+    document.getElementById('hist-body').innerHTML='';
+    document.getElementById('hist-empty').style.display='block';
+  } else {
+    document.getElementById('hist-empty').style.display='none';
+    document.getElementById('hist-body').innerHTML = mesesHist.map(m=>{
+      const mg = gastos.filter(g=>g.fecha.startsWith(m));
+      const tot = mg.reduce((s,g)=>s+g.monto,0);
+      const byCat = (cat) => mg.filter(g=>g.tipo.includes(cat.split('/')[0].split(' ')[0])).reduce((s,g)=>s+g.monto,0);
+      return `<tr>
+        <td class="bold">${m}</td>
+        <td class="r bold">${fmt(tot)}</td>
+        <td class="r">${byCat('Alimentación')>0?fmt(byCat('Alimentación')):'-'}</td>
+        <td class="r">${byCat('Transporte')>0?fmt(byCat('Transporte')):'-'}</td>
+        <td class="r">${byCat('Servicios')>0?fmt(byCat('Servicios')):'-'}</td>
+        <td class="r">${byCat('Ocio')>0?fmt(byCat('Ocio')):'-'}</td>
+        <td class="r">${byCat('Salud')>0?fmt(byCat('Salud')):'-'}</td>
+        <td class="r">${byCat('Educación')>0?fmt(byCat('Educación')):'-'}</td>
+        <td class="r">${byCat('Otros')>0?fmt(byCat('Otros')):'-'}</td>
+        <td class="r">${mg.length}</td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+// ============================================================
+// GRÁFICO HISTÓRICO DE COLUMNAS (con filtro por categoría)
+// ============================================================
+function renderHistoricoChart(){
+  var el = document.getElementById('chart-col-hist');
+  if(!el) return;
+
+  // Leer checkboxes de filtro
+  var filtroMap = {
+    'Alimentación': document.getElementById('hf-alim') ? document.getElementById('hf-alim').checked : true,
+    'Transporte':   document.getElementById('hf-trans') ? document.getElementById('hf-trans').checked : true,
+    'Servicios':    document.getElementById('hf-serv') ? document.getElementById('hf-serv').checked : true,
+    'Ocio / Entretenimiento': document.getElementById('hf-ocio') ? document.getElementById('hf-ocio').checked : true,
+    'Salud':        document.getElementById('hf-salud') ? document.getElementById('hf-salud').checked : true,
+    'Educación':    document.getElementById('hf-educ') ? document.getElementById('hf-educ').checked : true,
+    'Otros':        document.getElementById('hf-otros') ? document.getElementById('hf-otros').checked : true
+  };
+
+  var seen={}, meses=[];
+  gastos.forEach(function(g){ var k=g.fecha.substring(0,7); if(!seen[k]){seen[k]=1;meses.push(k);} });
+  meses.sort();
+  if(!meses.length){ el.innerHTML=''; return; }
+
+  var lbl={
+    '2025-08':'Ago 25','2025-09':'Set 25','2025-10':'Oct 25','2025-11':'Nov 25','2025-12':'Dic 25',
+    '2026-01':'Ene 26','2026-02':'Feb 26','2026-03':'Mar 26','2026-04':'Abr 26',
+    '2026-05':'May 26','2026-06':'Jun 26','2026-07':'Jul 26','2026-08':'Ago 26',
+    '2026-09':'Set 26','2026-10':'Oct 26','2026-11':'Nov 26','2026-12':'Dic 26'
+  };
+
+  var tots = meses.map(function(m){
+    return gastos.filter(function(g){
+      return g.fecha.startsWith(m) && (filtroMap[g.tipo] !== false);
+    }).reduce(function(s,g){ return s+g.monto; }, 0);
+  });
+
+  var mx=Math.max.apply(null,tots.concat([1]));
+  var H=160,bW=48,gap=8,padL=14,W=padL+meses.length*(bW+gap)+20,sH=H+56;
+  var sel=document.getElementById('dash-mes').value;
+  var out='';
+
+  meses.forEach(function(m,i){
+    var v=tots[i], bH=Math.max(4,Math.round(v/mx*H)), x=padL+i*(bW+gap), y=H+8-bH;
+    var c=(m===sel)?'#1a5fa8':(v>2500?'#c0392b':'#2d7a3a');
+    out+='<rect x="'+x+'" y="'+y+'" width="'+bW+'" height="'+bH+'" fill="'+c+'" rx="3" opacity="0.85"/>';
+    out+='<text x="'+(x+bW/2)+'" y="'+(y-4)+'" text-anchor="middle" font-size="9" fill="#555">S/'+Math.round(v).toLocaleString('es-PE')+'</text>';
+    out+='<text x="'+(x+bW/2)+'" y="'+(H+26)+'" text-anchor="middle" font-size="9" fill="#888">'+(lbl[m]||m)+'</text>';
+  });
+
+  var ly=H+8-Math.round(1700/mx*H);
+  out+='<line x1="'+padL+'" y1="'+ly+'" x2="'+(W-10)+'" y2="'+ly+'" stroke="#b06010" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.8"/>';
+  out+='<text x="'+(W-10)+'" y="'+(ly-3)+'" font-size="9" fill="#b06010" text-anchor="end">S/1,700</text>';
+  el.innerHTML='<svg width="'+W+'" height="'+sH+'" xmlns="http://www.w3.org/2000/svg" style="display:block">'+out+'</svg>';
+  renderHistoricoChart();
+}
+
+// ============================================================
+// NAV
+// ============================================================
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  event.target.classList.add('active');
+  if(id==='resumen') renderDashboard();
+}
+
+// Cerrar modal con Escape
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+document.getElementById('modal').addEventListener('click',e=>{ if(e.target===document.getElementById('modal')) closeModal(); });
+
+// INIT
+loadData();
+renderFlujo();
+renderGastos();
+setEsc('base');
+</script>
+</body>
+</html>
