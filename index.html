@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Financiero · Javier Acuña</title>
+<title>Dashboard Control · Javier Acuña</title>
 <style>
   :root {
     --bg: #f5f5f0;
@@ -1149,8 +1149,8 @@ let currentEsc = 'base';
 // 1) Ve a script.google.com, crea un nuevo proyecto, pega el código del Apps Script
 // 2) Publica como Web App (Ejecutar como: Yo, Acceso: Cualquiera)
 // 3) Copia la URL y reemplaza 'TU_URL_APPS_SCRIPT_AQUI' abajo
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxiPbW6VcOHxDnO88W7JR7Ytle_gaUnPbMGDwzcNgYUKMhDjnl_fiDyqZs2AogI5F-3nw/exec';
-const SYNC_ENABLED = GAS_URL !== 'https://script.google.com/macros/s/AKfycbxiPbW6VcOHxDnO88W7JR7Ytle_gaUnPbMGDwzcNgYUKMhDjnl_fiDyqZs2AogI5F-3nw/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzvs5BMK_y6WpXKp67KQo8nXCg53vxi9upADQbkyKsWlUVckgVLv0Vf2qed09B-yie7TQ/exec';
+const SYNC_ENABLED = GAS_URL !== 'https://script.google.com/macros/s/AKfycbzvs5BMK_y6WpXKp67KQo8nXCg53vxi9upADQbkyKsWlUVckgVLv0Vf2qed09B-yie7TQ/exec';
 
 function setSyncIndicator(state, msg){
   const el = document.getElementById('sync-indicator');
@@ -1183,7 +1183,7 @@ async function loadData(){
           if(!gastos.find(x=>x.id===g.id)) gastos.push(g);
           else { const i=gastos.findIndex(x=>x.id===g.id); gastos[i]=g; }
         });
-        localStorage.setItem('javier_gastos', JSON.stringify(data.gastos));
+        localStorage.setItem('javier_gastos', JSON.stringify(gastos));
         setSyncIndicator('ok','Sincronizado ✓');
         setTimeout(()=>setSyncIndicator('idle',''),3000);
       }
@@ -1192,17 +1192,25 @@ async function loadData(){
 }
 
 function saveData(){
-  const nuevos = gastos.filter(g=>!HIST_PREVIO.find(h=>h.id===g.id));
-  localStorage.setItem('javier_gastos', JSON.stringify(nuevos));
+  // Guardado local (cache)
+  localStorage.setItem('javier_gastos', JSON.stringify(gastos));
+
   if(SYNC_ENABLED){
     setSyncIndicator('syncing','Guardando...');
+    
     fetch(GAS_URL+'?action=save',{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({gastos:nuevos})
-    }).then(r=>r.json()).then(()=>{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({gastos}) // 🔥 TODO, no solo nuevos
+    })
+    .then(r=>r.json())
+    .then(()=>{
       setSyncIndicator('ok','Guardado en nube ✓');
       setTimeout(()=>setSyncIndicator('idle',''),3000);
-    }).catch(()=>setSyncIndicator('error','Error - guardado local'));
+    })
+    .catch(()=>{
+      setSyncIndicator('error','Error - guardado local');
+    });
   }
 }
 
@@ -1851,10 +1859,22 @@ document.getElementById('modal').addEventListener('click',e=>{ if(e.target===doc
 
 // INIT
 (async function(){
+  setSyncIndicator('syncing','Inicializando...');
+
   await loadData();
   renderFlujo();
   renderGastos();
   setEsc('base');
+
+  setSyncIndicator('ok','Listo');
+
+  // 🔥 AUTO-SYNC
+  setInterval(()=>{
+    if(SYNC_ENABLED){
+      loadData();
+    }
+  }, 10000); // cada 10 segundos
+
 })();
 </script>
 </body>
