@@ -1150,8 +1150,8 @@ let currentEsc = 'base';
 // 2) Publica como Web App (Ejecutar como: Yo, Acceso: Cualquiera)
 // 3) Copia la URL y reemplaza 'TU_URL_APPS_SCRIPT_AQUI' abajo
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbwogbePAByUh42dbBN-AOBg32OjNzGIxC6UjBFHjMgokO2yjLglfG59SReIMJBgsH_zcg/exec';
-const SYNC_ENABLED = GAS_URL !== 'https://script.google.com/macros/s/AKfycbwogbePAByUh42dbBN-AOBg32OjNzGIxC6UjBFHjMgokO2yjLglfG59SReIMJBgsH_zcg/exec';
-
+const SYNC_ENABLED = true;
+  
 function setSyncIndicator(state, msg){
   const el = document.getElementById('sync-indicator');
   if(!el) return;
@@ -1175,7 +1175,9 @@ async function loadData(){
   if(SYNC_ENABLED){
     setSyncIndicator('syncing','Sincronizando...');
     try {
-      const res = await fetch(GAS_URL+'?action=load');
+      const res = await fetch(GAS_URL + '?action=load&ts=' + Date.now(), {
+  cache: 'no-store'
+});
       const data = await res.json();
       if(data.gastos && Array.isArray(data.gastos)){
         gastos = [...HIST_PREVIO];
@@ -1201,11 +1203,19 @@ function saveData(){
     fetch(GAS_URL+'?action=save',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({gastos}) // 🔥 TODO, no solo nuevos
+      body:JSON.stringify({gastos}),
+      cache: 'no-store'
     })
     .then(r=>r.json())
-    .then(()=>{
-      setSyncIndicator('ok','Guardado en nube ✓');
+    .then(data=>{
+      console.log("SAVE RESPONSE:", data);
+
+      if(data.status === 'ok'){
+        setSyncIndicator('ok','Guardado en nube ✓');
+      } else {
+        setSyncIndicator('error','Error backend');
+      }
+
       setTimeout(()=>setSyncIndicator('idle',''),3000);
     })
     .catch(()=>{
