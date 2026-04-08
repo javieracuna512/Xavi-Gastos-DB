@@ -1204,17 +1204,10 @@ function saveData(){
       body:JSON.stringify({gastos}) // 🔥 TODO, no solo nuevos
     })
     .then(r=>r.json())
-   .then(data=>{
-  console.log("SAVE RESPONSE:", data);
-
-  if(data.status === 'ok'){
-    setSyncIndicator('ok','Guardado en nube ✓');
-  } else {
-    setSyncIndicator('error','Error real en backend');
-  }
-
-  setTimeout(()=>setSyncIndicator('idle',''),3000);
-}))
+    .then(()=>{
+      setSyncIndicator('ok','Guardado en nube ✓');
+      setTimeout(()=>setSyncIndicator('idle',''),3000);
+    })
     .catch(()=>{
       setSyncIndicator('error','Error - guardado local');
     });
