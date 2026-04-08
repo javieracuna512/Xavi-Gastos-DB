@@ -1152,57 +1152,58 @@ let currentEsc = 'base';
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbxiPbW6VcOHxDnO88W7JR7Ytle_gaUnPbMGDwzcNgYUKMhDjnl_fiDyqZs2AogI5F-3nw/exec';
 const SYNC_ENABLED = GAS_URL !== 'https://script.google.com/macros/s/AKfycbxiPbW6VcOHxDnO88W7JR7Ytle_gaUnPbMGDwzcNgYUKMhDjnl_fiDyqZs2AogI5F-3nw/exec';
 
-function setSyncIndicator(state, msg){
-  const el = document.getElementById('sync-indicator');
-  if(!el) return;
-  const icons = { idle:'', syncing:'🔄', ok:'🟢', error:'🔴' };
-  el.textContent = (icons[state]||'') + ' ' + (msg||'');
-  el.style.color = state==='error' ? 'var(--red)' : state==='ok' ? 'var(--green)' : 'var(--text3)';
-}
+function setSyncStatus(status) {
+  const el = document.getElementById("sync-indicator");
 
-async function loadData(){
-  gastos = [...HIST_PREVIO];
-  const raw = localStorage.getItem('javier_gastos');
-  if(raw){
-    try {
-      const local = JSON.parse(raw);
-      local.forEach(g => {
-        if(!gastos.find(x=>x.id===g.id)) gastos.push(g);
-        else { const i=gastos.findIndex(x=>x.id===g.id); gastos[i]=g; }
-      });
-    } catch(e){}
+  if (!el) return;
+
+  if (status === "ok") {
+    el.innerText = "● Sincronizado";
+    el.style.color = "green";
+  } else if (status === "loading") {
+    el.innerText = "● Sincronizando...";
+    el.style.color = "orange";
+  } else {
+    el.innerText = "● Error sync";
+    el.style.color = "red";
   }
-  if(SYNC_ENABLED){
-    setSyncIndicator('syncing','Sincronizando...');
-    try {
-      const res = await fetch(GAS_URL+'?action=load');
-      const data = await res.json();
-      if(data.gastos && Array.isArray(data.gastos)){
-        gastos = [...HIST_PREVIO];
-        data.gastos.forEach(g=>{
-          if(!gastos.find(x=>x.id===g.id)) gastos.push(g);
-          else { const i=gastos.findIndex(x=>x.id===g.id); gastos[i]=g; }
-        });
-        localStorage.setItem('javier_gastos', JSON.stringify(data.gastos));
-        setSyncIndicator('ok','Sincronizado ✓');
-        setTimeout(()=>setSyncIndicator('idle',''),3000);
-      }
-    } catch(e){ setSyncIndicator('error','Sin conexión - datos locales'); }
+}
+  //4. CARGAR DATOS DESDE GOOGLE SHEETS
+async function loadFromCloud() {
+  try {
+    setSyncStatus("loading");
+
+    const res = await fetch(GAS_URL + '?action=load');
+    const data = await res.json();
+
+    gastos = data.gastos || [];
+
+    renderGastos();
+    renderDashboard();
+
+    setSyncStatus("ok");
+
+  } catch (e) {
+    console.error(e);
+    setSyncStatus("error");
   }
 }
 
-function saveData(){
-  const nuevos = gastos.filter(g=>!HIST_PREVIO.find(h=>h.id===g.id));
-  localStorage.setItem('javier_gastos', JSON.stringify(nuevos));
-  if(SYNC_ENABLED){
-    setSyncIndicator('syncing','Guardando...');
-    fetch(GAS_URL+'?action=save',{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({gastos:nuevos})
-    }).then(r=>r.json()).then(()=>{
-      setSyncIndicator('ok','Guardado en nube ✓');
-      setTimeout(()=>setSyncIndicator('idle',''),3000);
-    }).catch(()=>setSyncIndicator('error','Error - guardado local'));
+async function saveToCloud() {
+  try {
+    setSyncStatus("loading");
+
+    await fetch(GAS_URL + '?action=save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gastos })
+    });
+
+    setSyncStatus("ok");
+
+  } catch (e) {
+    console.error(e);
+    setSyncStatus("error");
   }
 }
 
@@ -1389,25 +1390,35 @@ function closeModal(){
   editId = null;
 }
 
-function guardarGasto(){
+function guardarGasto() {
   const fecha = document.getElementById('g-fecha').value;
-  const monto = parseFloat(document.getElementById('g-monto').value);
+  const monto = parseFloat(document.getElementById('g-monto').value || 0);
   const tipo = document.getElementById('g-tipo').value;
+  const detalle = document.getElementById('g-detalle').value;
   const pago = document.getElementById('g-pago').value;
-  const detalle = document.getElementById('g-detalle').value.trim();
-  if(!fecha||!monto||isNaN(monto)||monto<=0){ alert('Completa fecha y monto válido.'); return; }
 
-  if(editId){
-    const idx = gastos.findIndex(x=>x.id===editId);
-    gastos[idx] = {id:editId,fecha,tipo,detalle,monto,pago};
-  } else {
-    gastos.push({id:'g'+Date.now(),fecha,tipo,detalle,monto,pago});
+  if (!fecha || !monto) {
+    alert("Completa fecha y monto");
+    return;
   }
-  saveData();
-  closeModal();
+
+  const nuevo = {
+    id: 'g_' + Date.now(),
+    fecha,
+    tipo,
+    detalle,
+    monto,
+    pago
+  };
+
+  gastos.push(nuevo);
+
+  saveToCloud(); // 🔥 CLAVE
+
   renderGastos();
   renderDashboard();
-  renderFlujo();
+
+  closeModal();
 }
 
 function eliminarGasto(id){
@@ -1859,3 +1870,6 @@ document.getElementById('modal').addEventListener('click',e=>{ if(e.target===doc
 </script>
 </body>
 </html>
+window.onload = function () {
+  loadFromCloud();
+};
