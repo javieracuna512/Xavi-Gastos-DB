@@ -1168,11 +1168,9 @@ async function loadData(){
       const res = await fetch(GAS_URL + '?action=load&ts=' + Date.now(), {
         cache: 'no-store'
       });
-
       const data = await res.json();
-
       if(data.gastos && Array.isArray(data.gastos)){
-        
+
         // 🔥 BASE: HISTÓRICO
         gastos = [...HIST_PREVIO];
 
@@ -1183,18 +1181,25 @@ async function loadData(){
           }
         });
 
-        localStorage.setItem('javier_gastos', JSON.stringify(gastos));
+        // ✅ NUEVO: rescatar gastos locales que aún no llegaron a la nube
+        const raw = localStorage.getItem('javier_gastos');
+        if(raw){
+          const local = JSON.parse(raw);
+          local.forEach(g=>{
+            if(!gastos.find(x=>x.id===g.id)){
+              gastos.push(g); // gasto local pendiente, no está en nube todavía
+            }
+          });
+        }
 
+        localStorage.setItem('javier_gastos', JSON.stringify(gastos));
         renderGastos();
         renderFlujo();
-
         setSyncIndicator('ok','Sincronizado ✓');
         setTimeout(()=>setSyncIndicator('idle',''),3000);
       }
-
     } catch(e){
       setSyncIndicator('error','Sin conexión - datos locales');
-
       const raw = localStorage.getItem('javier_gastos');
       if(raw){
         gastos = JSON.parse(raw);
@@ -1206,12 +1211,9 @@ async function loadData(){
 }
 function saveData(){
   localStorage.setItem('javier_gastos', JSON.stringify(gastos));
-
   if(SYNC_ENABLED){
-    isSaving = true; // 🔥 BLOQUEA SYNC
-
+    isSaving = true;
     setSyncIndicator('syncing','Guardando...');
-    
     fetch(GAS_URL+'?action=save',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -1221,18 +1223,15 @@ function saveData(){
     .then(r=>r.json())
     .then(data=>{
       console.log("SAVE RESPONSE:", data);
-
       if(data.status === 'ok'){
         setSyncIndicator('ok','Guardado en nube ✓');
-
-        // 🔥 RECARGAR DESDE NUBE DESPUÉS DE GUARDAR
-        return loadData();
+        // ✅ NO llamar loadData() aquí — evita sobreescribir gastos recientes
       } else {
         setSyncIndicator('error','Error backend');
       }
     })
     .then(()=>{
-      isSaving = false; // 🔥 LIBERA SYNC
+      isSaving = false;
     })
     .catch(()=>{
       isSaving = false;
