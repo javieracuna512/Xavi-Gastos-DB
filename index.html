@@ -1214,28 +1214,30 @@ function saveData(){
   if(SYNC_ENABLED){
     isSaving = true;
     setSyncIndicator('syncing','Guardando...');
+
+    // Solo enviar gastos que NO son del histórico previo
+    const soloNuevos = gastos.filter(g => !HIST_PREVIO.find(h => h.id === g.id));
+
     fetch(GAS_URL+'?action=save',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({gastos}),
+      body: JSON.stringify({ gastos: soloNuevos }),
       cache: 'no-store'
     })
-    .then(r=>r.json())
-    .then(data=>{
-      console.log("SAVE RESPONSE:", data);
+    .then(r => r.json())
+    .then(data => {
       if(data.status === 'ok'){
         setSyncIndicator('ok','Guardado en nube ✓');
-        // ✅ NO llamar loadData() aquí — evita sobreescribir gastos recientes
+        setTimeout(()=>setSyncIndicator('idle',''), 3000);
       } else {
-        setSyncIndicator('error','Error backend');
+        setSyncIndicator('error','Error backend: ' + (data.message||''));
       }
     })
-    .then(()=>{
-      isSaving = false;
-    })
-    .catch(()=>{
-      isSaving = false;
+    .catch(() => {
       setSyncIndicator('error','Error - guardado local');
+    })
+    .finally(() => {
+      isSaving = false; // ✅ SIEMPRE se libera, con éxito o con error
     });
   }
 }
