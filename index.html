@@ -1142,7 +1142,8 @@ const HIST_PREVIO = [
 let gastos = [];
 let editId = null;
 let currentEsc = 'base';
-
+// 🔥 CONTROL DE SINCRONIZACIÓN
+let isSaving = false;
 // ============================================================
 // CONFIGURACIÓN GOOGLE SHEETS SYNC
 // ============================================================
@@ -1194,10 +1195,11 @@ async function loadData(){
 }
 
 function saveData(){
-  // Guardado local (cache)
   localStorage.setItem('javier_gastos', JSON.stringify(gastos));
 
   if(SYNC_ENABLED){
+    isSaving = true; // 🔥 BLOQUEA SYNC
+
     setSyncIndicator('syncing','Guardando...');
     
     fetch(GAS_URL+'?action=save',{
@@ -1212,18 +1214,22 @@ function saveData(){
 
       if(data.status === 'ok'){
         setSyncIndicator('ok','Guardado en nube ✓');
+
+        // 🔥 RECARGAR DESDE NUBE DESPUÉS DE GUARDAR
+        return loadData();
       } else {
         setSyncIndicator('error','Error backend');
       }
-
-      setTimeout(()=>setSyncIndicator('idle',''),3000);
+    })
+    .then(()=>{
+      isSaving = false; // 🔥 LIBERA SYNC
     })
     .catch(()=>{
+      isSaving = false;
       setSyncIndicator('error','Error - guardado local');
     });
   }
 }
-
 // ============================================================
 // FLUJO DE CAJA
 // ============================================================
@@ -1879,11 +1885,11 @@ document.getElementById('modal').addEventListener('click',e=>{ if(e.target===doc
   setSyncIndicator('ok','Listo');
 
   // 🔥 AUTO-SYNC
-  setInterval(()=>{
-    if(SYNC_ENABLED){
-      loadData();
-    }
-  }, 10000); // cada 10 segundos
+ setInterval(()=>{
+  if(SYNC_ENABLED && !isSaving){
+    loadData();
+  }
+}, 10000);// cada 10 segundos
 
 })();
 </script>
