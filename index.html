@@ -1172,7 +1172,16 @@ async function loadData(){
       const data = await res.json();
 
       if(data.gastos && Array.isArray(data.gastos)){
-        gastos = data.gastos; // 🔥 DIRECTO DE NUBE
+        
+        // 🔥 BASE: HISTÓRICO
+        gastos = [...HIST_PREVIO];
+
+        // 🔥 AGREGAR LO DE LA NUBE SIN DUPLICAR
+        data.gastos.forEach(g=>{
+          if(!gastos.find(x=>x.id===g.id)){
+            gastos.push(g);
+          }
+        });
 
         localStorage.setItem('javier_gastos', JSON.stringify(gastos));
 
@@ -1186,7 +1195,6 @@ async function loadData(){
     } catch(e){
       setSyncIndicator('error','Sin conexión - datos locales');
 
-      // fallback local
       const raw = localStorage.getItem('javier_gastos');
       if(raw){
         gastos = JSON.parse(raw);
@@ -1196,7 +1204,6 @@ async function loadData(){
     }
   }
 }
-
 function saveData(){
   localStorage.setItem('javier_gastos', JSON.stringify(gastos));
 
