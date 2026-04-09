@@ -1585,27 +1585,8 @@ function renderDashboard(){
   document.getElementById('dash-transacciones').innerHTML = `<div class="metric-label">Transacciones</div><div class="metric-val">${filtrados.length}</div><div class="metric-sub">${mes}</div>`;
 
   // Histórico
-  const mesesHist = [...new Set(gastos.map(g=>g.fecha.substring(0,7)))].sort();
-  if(mesesHist.length===0){
-    document.getElementById('hist-body').innerHTML='';
-    document.getElementById('hist-empty').style.display='block';
-  } else {
-    document.getElementById('hist-empty').style.display='none';
-    document.getElementById('hist-body').innerHTML = mesesHist.map(m=>{
-      const mg = gastos.filter(g=>g.fecha.startsWith(m));
-      const tot = mg.reduce((s,g)=>s+g.monto,0);
-      const catCell = (mg, cat) => {
-        const v = mg.filter(g=>g.tipo===cat).reduce((s,g)=>s+g.monto,0);
-        return `<td class="r">${v>0?fmt(v):'-'}</td>`;
-      };
-      return `<tr>
-        <td class="bold">${m}</td>
-        <td class="r bold">${fmt(tot)}</td>
-        ${catCell(mg,'Restaurantes')}${catCell(mg,'Alimentación')}${catCell(mg,'Ropa y Otros')}${catCell(mg,'Compra Celular')}${catCell(mg,'Servicios Fijos')}${catCell(mg,'Bebidas')}${catCell(mg,'Efectivo')}${catCell(mg,'Movilidad')}${catCell(mg,'Ocio')}${catCell(mg,'Adicional')}${catCell(mg,'Seguridad y Salud')}${catCell(mg,'Publicidad')}${catCell(mg,'Desayuno')}${catCell(mg,'Suscripciones')}${catCell(mg,'Intereses')}${catCell(mg,'Prestamos')}${catCell(mg,'Inversión')}
-        <td class="r">${mg.length}</td>
-      </tr>`;
-    }).join('');
-  }
+   renderHistoricoChart();
+  renderPivot();
 }
 
 // ============================================================
@@ -1816,9 +1797,9 @@ function renderHistoricoChart(){
   var ly=H+8-Math.round(1700/mx*H);
   out+='<line x1="'+padL+'" y1="'+ly+'" x2="'+(W-10)+'" y2="'+ly+'" stroke="#b06010" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.8"/>';
   out+='<text x="'+(W-10)+'" y="'+(ly-3)+'" font-size="9" fill="#b06010" text-anchor="end">S/1,700</text>';
-  el.innerHTML='<svg width="'+W+'" height="'+sH+'" xmlns="http://www.w3.org/2000/svg" style="display:block">'+out+'</svg>';
-  renderHistoricoChart();
+ el.innerHTML='<svg width="'+W+'" height="'+sH+'" xmlns="http://www.w3.org/2000/svg" style="display:block">'+out+'</svg>';
   renderPivot();
+}
 }
 
 // ============================================================
