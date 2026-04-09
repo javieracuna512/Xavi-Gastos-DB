@@ -1162,35 +1162,38 @@ function setSyncIndicator(state, msg){
 }
 
 async function loadData(){
-  gastos = [...HIST_PREVIO];
-  const raw = localStorage.getItem('javier_gastos');
-  if(raw){
-    try {
-      const local = JSON.parse(raw);
-      local.forEach(g => {
-        if(!gastos.find(x=>x.id===g.id)) gastos.push(g);
-        else { const i=gastos.findIndex(x=>x.id===g.id); gastos[i]=g; }
-      });
-    } catch(e){}
-  }
   if(SYNC_ENABLED){
     setSyncIndicator('syncing','Sincronizando...');
     try {
       const res = await fetch(GAS_URL + '?action=load&ts=' + Date.now(), {
-  cache: 'no-store'
-});
+        cache: 'no-store'
+      });
+
       const data = await res.json();
+
       if(data.gastos && Array.isArray(data.gastos)){
-        gastos = [...HIST_PREVIO];
-        data.gastos.forEach(g=>{
-          if(!gastos.find(x=>x.id===g.id)) gastos.push(g);
-          else { const i=gastos.findIndex(x=>x.id===g.id); gastos[i]=g; }
-        });
+        gastos = data.gastos; // 🔥 DIRECTO DE NUBE
+
         localStorage.setItem('javier_gastos', JSON.stringify(gastos));
+
+        renderGastos();
+        renderFlujo();
+
         setSyncIndicator('ok','Sincronizado ✓');
         setTimeout(()=>setSyncIndicator('idle',''),3000);
       }
-    } catch(e){ setSyncIndicator('error','Sin conexión - datos locales'); }
+
+    } catch(e){
+      setSyncIndicator('error','Sin conexión - datos locales');
+
+      // fallback local
+      const raw = localStorage.getItem('javier_gastos');
+      if(raw){
+        gastos = JSON.parse(raw);
+        renderGastos();
+        renderFlujo();
+      }
+    }
   }
 }
 
