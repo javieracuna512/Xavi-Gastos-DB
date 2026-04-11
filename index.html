@@ -148,7 +148,7 @@
     </div>
   </div>
   <div class="grid4">
-    <div class="metric"><div class="metric-label">Ahorrado hoy</div><div class="metric-val" id="kpi-ahorro">S/ 7,500</div><div class="metric-sub">Inicio abril 2026</div></div>
+    <div class="metric"><div class="metric-label">Ahorrado hoy</div><div class="metric-val" id="kpi-ahorro">S/ 6,500</div><div class="metric-sub">Inicio abril 2026</div></div>
     <div class="metric"><div class="metric-label">Falta para máster</div><div class="metric-val" id="kpi-falta" style="color:var(--red)">—</div><div class="metric-sub" id="kpi-falta-sub">calculando...</div></div>
     <div class="metric"><div class="metric-label">Mes en que se paga máster</div><div class="metric-val" id="kpi-master-mes" style="font-size:16px">—</div><div class="metric-sub" id="kpi-master-sub">calculando...</div></div>
     <div class="metric"><div class="metric-label">Saldo proyectado abr 2027</div><div class="metric-val" id="kpi-saldo-final">—</div><div class="metric-sub">Proyección dic 2027</div></div>
@@ -1080,10 +1080,11 @@ function renderFlujo(){
     const vidax=grx>0?grx:GASTOS_BASE;
     acumHoy+=(NETO+c.extras[ix])-(vidax+gespArr[ix]);
   }
-  const faltaMaster=Math.max(0,MASTER-Math.max(INIT,acumHoy));
+  const faltaMaster = Math.max(0, MASTER - acumHoy);
   const kpiFalta=document.getElementById('kpi-falta');
   if(masterDone){kpiFalta.textContent='S/ 0 ✓';kpiFalta.style.color='var(--green)';document.getElementById('kpi-falta-sub').textContent='Máster pagado';}
-  else{kpiFalta.textContent=fmt(faltaMaster);kpiFalta.style.color=faltaMaster>0?'var(--red)':'var(--green)';document.getElementById('kpi-falta-sub').textContent=fmt(MASTER)+' total · límite oct 2026';}
+  else{kpiFalta.textContent=fmt(faltaMaster);kpiFalta.style.color=faltaMaster>0?'var(--red)':'var(--green)';document.getElementById('kpi-falta-sub').textContent = 
+  fmt(MASTER) + ' - acumulado actual ' + fmt(acumHoy);}
   document.getElementById('kpi-master-mes').textContent=masterMes||'Octubre 2026';
   document.getElementById('kpi-master-sub').textContent=masterMes?'Objetivo alcanzado':'Límite: oct 2026';
   let acum2=INIT;
