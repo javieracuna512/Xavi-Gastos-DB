@@ -971,28 +971,43 @@ async function loadData(){
 }
 
 function saveData(){
+  // Siempre guardamos en localStorage primero
+  const soloNuevos = gastos.filter(g => !HIST_PREVIO.find(h => h.id === g.id));
   localStorage.setItem('javier_gastos', JSON.stringify(gastos));
-  if(!SYNC_ENABLED) return;
+  localStorage.setItem('javier_nuevos', JSON.stringify(soloNuevos));
+
+  if(!SYNC_ENABLED || soloNuevos.length === 0) {
+    renderGastos(); renderFlujo();
+    return;
+  }
+
   isSaving = true;
   setSyncIndicator('syncing','Guardando...');
-  const soloNuevos = gastos.filter(g => !HIST_PREVIO.find(h => h.id === g.id));
-  fetch(GAS_URL + '?action=save', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({gastos: soloNuevos}),
-    cache: 'no-store'
-  })
-  .then(r => r.json())
-  .then(data => {
-    if(data.status === 'ok'){
-      setSyncIndicator('ok','Guardado en nube ✓');
-      setTimeout(() => setSyncIndicator('idle',''), 3000);
-    } else {
-      setSyncIndicator('error','Error: ' + (data.message||''));
-    }
-  })
-  .catch(() => setSyncIndicator('error','Error - guardado local'))
-  .finally(() => { isSaving = false; });
+
+  // ✅ CLAVE: usamos GET en lugar de POST para evitar el problema CORS
+  // Apps Script siempre permite GET cross-origin, POST falla desde GitHub Pages
+  try {
+    const payload = btoa(unescape(encodeURIComponent(JSON.stringify(soloNuevos))));
+    const url = GAS_URL + '?action=save&data=' + encodeURIComponent(payload) + '&ts=' + Date.now();
+    
+    fetch(url, { method: 'GET', cache: 'no-store' })
+    .then(r => r.json())
+    .then(data => {
+      if(data.status === 'ok'){
+        setSyncIndicator('ok','Guardado ✓ · sync en 15s');
+        setTimeout(() => setSyncIndicator('idle',''), 3000);
+      } else {
+        setSyncIndicator('error','Error nube: ' + (data.message||''));
+      }
+    })
+    .catch(err => {
+      setSyncIndicator('error','Sin red · guardado local');
+    })
+    .finally(() => { isSaving = false; });
+  } catch(e) {
+    isSaving = false;
+    setSyncIndicator('error','Error local');
+  }
 }
 
 // ============================================================
