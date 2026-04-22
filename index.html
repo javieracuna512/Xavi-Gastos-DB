@@ -940,21 +940,25 @@ async function loadData(){
     const res = await fetch(GAS_URL + '?action=load&ts=' + Date.now(), { cache: 'no-store' });
     const data = await res.json();
     if(data.gastos && Array.isArray(data.gastos)){
-      // Base: histórico fijo
-      gastos = [...HIST_PREVIO];
-      // Agregar lo de la nube sin duplicar
+      const merged = [...HIST_PREVIO];
+      
+      // 1. Agregar todo lo que vino de la nube
       data.gastos.forEach(g => {
-        if(!gastos.find(x => x.id === g.id)) gastos.push(g);
+        if(!merged.find(x => x.id === g.id)) merged.push(g);
       });
-      // Rescatar gastos locales pendientes que aún no llegaron a la nube
+      
+      // 2. Agregar gastos locales pendientes aún no subidos
       try {
         const raw = localStorage.getItem('javier_gastos');
         if(raw){
           JSON.parse(raw).forEach(g => {
-            if(!gastos.find(x => x.id === g.id)) gastos.push(g);
+            if(!merged.find(x => x.id === g.id)) merged.push(g);
           });
         }
       } catch(e){}
+      
+      // ✅ FIX: primero asignar gastos, LUEGO guardar localStorage
+      gastos = merged;
       localStorage.setItem('javier_gastos', JSON.stringify(gastos));
       renderGastos();
       renderFlujo();
@@ -972,10 +976,11 @@ async function loadData(){
 }
 
 function saveData(){
-  // Siempre guardamos en localStorage primero
+  // Todos los gastos que no son del historial fijo original
   const soloNuevos = gastos.filter(g => !HIST_PREVIO.find(h => h.id === g.id));
+  
+  // ✅ FIX: guardar array completo en localStorage
   localStorage.setItem('javier_gastos', JSON.stringify(gastos));
-  localStorage.setItem('javier_nuevos', JSON.stringify(soloNuevos));
 
   if(!SYNC_ENABLED || soloNuevos.length === 0) {
     renderGastos(); renderFlujo();
@@ -985,8 +990,6 @@ function saveData(){
   isSaving = true;
   setSyncIndicator('syncing','Guardando...');
 
-  // ✅ CLAVE: usamos GET en lugar de POST para evitar el problema CORS
-  // Apps Script siempre permite GET cross-origin, POST falla desde GitHub Pages
   try {
     const payload = btoa(unescape(encodeURIComponent(JSON.stringify(soloNuevos))));
     const url = GAS_URL + '?action=save&data=' + encodeURIComponent(payload) + '&ts=' + Date.now();
@@ -995,13 +998,15 @@ function saveData(){
     .then(r => r.json())
     .then(data => {
       if(data.status === 'ok'){
-        setSyncIndicator('ok','Guardado ✓ · sync en 15s');
+        setSyncIndicator('ok','Guardado ✓ · sync en 30s');
         setTimeout(() => setSyncIndicator('idle',''), 3000);
+        // ✅ FIX: después de guardar en nube, recargar para confirmar
+        setTimeout(() => { if(!isSaving) loadData(); }, 2000);
       } else {
         setSyncIndicator('error','Error nube: ' + (data.message||''));
       }
     })
-    .catch(err => {
+    .catch(() => {
       setSyncIndicator('error','Sin red · guardado local');
     })
     .finally(() => { isSaving = false; });
@@ -1428,8 +1433,8 @@ document.getElementById('modal').addEventListener('click', e=>{ if(e.target===do
   await loadData();
   // AUTO-SYNC cada 15 segundos// ***********ACTUALIZADO EL 22.04.2026*********************
   setInterval(function(){
-    if(SYNC_ENABLED && !isSaving) loadData();
-  }, 120000);
+  if(SYNC_ENABLED && !isSaving) loadData();
+}, 30000);
 })();
 </script>
 </body>
