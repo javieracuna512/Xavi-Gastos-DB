@@ -922,7 +922,8 @@ let currentEsc = 'base';
 let isSaving = false;
 
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbwogbePAByUh42dbBN-AOBg32OjNzGIxC6UjBFHjMgokO2yjLglfG59SReIMJBgsH_zcg/exec';
-const SYNC_ENABLED = true;
+                  
+  const SYNC_ENABLED = true;
 
 function setSyncIndicator(state, msg){
   const el = document.getElementById('sync-indicator');
@@ -1425,10 +1426,10 @@ document.getElementById('modal').addEventListener('click', e=>{ if(e.target===do
   setEsc('base');
   // Luego sincronizar con la nube
   await loadData();
-  // AUTO-SYNC cada 15 segundos
+  // AUTO-SYNC cada 15 segundos// ***********ACTUALIZADO EL 22.04.2026*********************
   setInterval(function(){
     if(SYNC_ENABLED && !isSaving) loadData();
-  }, 15000);
+  }, 120000);
 })();
 </script>
 </body>
