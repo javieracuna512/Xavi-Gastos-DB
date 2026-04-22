@@ -937,87 +937,117 @@ async function loadData(){
   if(!SYNC_ENABLED) return;
   setSyncIndicator('syncing','Sincronizando...');
   try {
-    const res = await fetch(GAS_URL + '?action=load&ts=' + Date.now(), { cache: 'no-store' });
-    const data = await res.json();
+    const url = GAS_URL + '?action=load&ts=' + Date.now();
+    const res = await fetch(url, { cache: 'no-store' });
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); }
+    catch(e) {
+      setSyncIndicator('error','Respuesta inválida del servidor');
+      console.error('No es JSON:', text.substring(0,300));
+      return;
+    }
     if(data.gastos && Array.isArray(data.gastos)){
-      
-      // La nube es la fuente de verdad — partir siempre del historial fijo
       const merged = [...HIST_PREVIO];
-      
-      // Agregar TODO lo que vino de la nube (de cualquier dispositivo)
+      // Agregar todo lo de la nube
       data.gastos.forEach(g => {
-        if(!merged.find(x => x.id === g.id)) merged.push(g);
+        if(g.id && g.fecha && g.monto > 0 && !merged.find(x => x.id === g.id)){
+          merged.push(g);
+        }
       });
-      
-      // Agregar gastos locales que AÚN NO llegaron a la nube
-      // (gastos nuevos recién creados en este dispositivo, pendientes de subir)
-      const pendientes = gastos.filter(g => 
-        !HIST_PREVIO.find(h => h.id === g.id) && 
+      // Preservar gastos locales nuevos aún no subidos (pendientes)
+      const pendientes = gastos.filter(g =>
+        !HIST_PREVIO.find(h => h.id === g.id) &&
         !data.gastos.find(n => n.id === g.id)
       );
       pendientes.forEach(g => merged.push(g));
-      
       gastos = merged;
       localStorage.setItem('javier_gastos', JSON.stringify(gastos));
       renderGastos();
       renderFlujo();
-      setSyncIndicator('ok','Sincronizado ✓ · ' + data.gastos.length + ' en nube');
-      setTimeout(() => setSyncIndicator('idle',''), 4000);
+      const nuevosEnNube = data.gastos.length;
+      setSyncIndicator('ok', `Sincronizado ✓ · ${nuevosEnNube} en nube · ${pendientes.length} pendientes`);
+      setTimeout(() => setSyncIndicator('idle',''), 5000);
+    } else {
+      setSyncIndicator('error','Respuesta sin gastos: ' + JSON.stringify(data).substring(0,100));
     }
   } catch(e){
-    setSyncIndicator('error','Sin conexión - datos locales');
+    setSyncIndicator('error','Error: ' + e.message);
+    console.error('loadData error:', e);
     try {
       const raw = localStorage.getItem('javier_gastos');
-      if(raw){ 
-        gastos = JSON.parse(raw); 
-      } else { 
-        gastos = [...HIST_PREVIO]; 
-      }
-      renderGastos(); 
-      renderFlujo();
-    } catch(ex){ 
-      gastos = [...HIST_PREVIO]; 
-      renderGastos(); 
-      renderFlujo(); 
-    }
+      if(raw){ gastos = JSON.parse(raw); }
+      else { gastos = [...HIST_PREVIO]; }
+      renderGastos(); renderFlujo();
+    } catch(ex){ gastos = [...HIST_PREVIO]; renderGastos(); renderFlujo(); }
   }
 }
 
 function saveData(){
   const soloNuevos = gastos.filter(g => !HIST_PREVIO.find(h => h.id === g.id));
   localStorage.setItem('javier_gastos', JSON.stringify(gastos));
+  renderGastos(); renderFlujo();
 
-  if(!SYNC_ENABLED || soloNuevos.length === 0) {
-    renderGastos(); renderFlujo();
-    return;
-  }
+  if(!SYNC_ENABLED || soloNuevos.length === 0) return;
 
   isSaving = true;
-  setSyncIndicator('syncing','Guardando...');
+  setSyncIndicator('syncing', 'Guardando ' + soloNuevos.length + ' gastos...');
 
-  try {
-    const payload = btoa(unescape(encodeURIComponent(JSON.stringify(soloNuevos))));
+  // ✅ CLAVE: enviar de a 5 gastos por vez para no superar límite de URL
+  const LOTE = 5;
+  const lotes = [];
+  for(let i = 0; i < soloNuevos.length; i += LOTE){
+    lotes.push(soloNuevos.slice(i, i + LOTE));
+  }
+
+  let loteIdx = 0;
+  let totalAdded = 0;
+
+  function enviarLote(){
+    if(loteIdx >= lotes.length){
+      // Todos los lotes enviados
+      isSaving = false;
+      setSyncIndicator('ok', 'Guardado ✓ · ' + totalAdded + ' nuevos subidos');
+      setTimeout(() => loadData(), 1500);
+      return;
+    }
+
+    const lote = lotes[loteIdx];
+    const payload = btoa(unescape(encodeURIComponent(JSON.stringify(lote))));
     const url = GAS_URL + '?action=save&data=' + encodeURIComponent(payload) + '&ts=' + Date.now();
-    
+
+    console.log('Enviando lote', loteIdx+1, 'de', lotes.length, '| URL length:', url.length);
+
     fetch(url, { method: 'GET', cache: 'no-store' })
-    .then(r => r.json())
-    .then(result => {
+    .then(r => r.text())
+    .then(text => {
+      let result;
+      try { result = JSON.parse(text); }
+      catch(e) {
+        console.error('Respuesta no-JSON en lote', loteIdx, ':', text.substring(0,200));
+        setSyncIndicator('error', 'Error en lote ' + (loteIdx+1));
+        isSaving = false;
+        return;
+      }
       if(result.status === 'ok'){
-        setSyncIndicator('ok','Guardado ✓');
-        // Recargar desde nube para confirmar y ver gastos de otros dispositivos
-        setTimeout(() => loadData(), 1500);
+        totalAdded += (result.added || 0);
+        setSyncIndicator('syncing', 'Lote ' + (loteIdx+1) + '/' + lotes.length + ' guardado...');
+        loteIdx++;
+        setTimeout(enviarLote, 500); // esperar 500ms entre lotes
       } else {
-        setSyncIndicator('error','Error: ' + (result.message||''));
+        setSyncIndicator('error', 'Error lote ' + (loteIdx+1) + ': ' + (result.message||''));
+        console.error('Error en lote:', result);
+        isSaving = false;
       }
     })
-    .catch(() => {
-      setSyncIndicator('error','Sin red · guardado local');
-    })
-    .finally(() => { isSaving = false; });
-  } catch(e) {
-    isSaving = false;
-    setSyncIndicator('error','Error local');
+    .catch(err => {
+      setSyncIndicator('error', 'Sin red en lote ' + (loteIdx+1));
+      console.error('Fetch error lote:', err);
+      isSaving = false;
+    });
   }
+
+  enviarLote();
 }
 
 // ============================================================
@@ -1428,17 +1458,40 @@ document.getElementById('modal').addEventListener('click', e=>{ if(e.target===do
 // ============================================================
 (async function(){
   setSyncIndicator('syncing','Inicializando...');
-  // Cargar histórico base inmediatamente para que la UI no quede vacía
   gastos = [...HIST_PREVIO];
+  
+  // Rescatar pendientes locales ANTES de hacer loadData
+  try {
+    const raw = localStorage.getItem('javier_gastos');
+    if(raw){
+      const locales = JSON.parse(raw);
+      const pendientesLocales = locales.filter(g => 
+        !HIST_PREVIO.find(h => h.id === g.id)
+      );
+      if(pendientesLocales.length > 0){
+        console.log('Pendientes locales rescatados:', pendientesLocales.length);
+        pendientesLocales.forEach(g => gastos.push(g));
+      }
+    }
+  } catch(e){}
+
   renderFlujo();
   renderGastos();
   setEsc('base');
-  // Luego sincronizar con la nube
+  
+  // Sincronizar con nube — los pendientes se subirán dentro de loadData
   await loadData();
-  // AUTO-SYNC cada 15 segundos// ***********ACTUALIZADO EL 22.04.2026*********************
+  
+  // Si hay pendientes que no llegaron a la nube, subirlos ahora
+  const pendientes = gastos.filter(g => !HIST_PREVIO.find(h => h.id === g.id));
+  if(pendientes.length > 0){
+    console.log('Subiendo pendientes:', pendientes.length);
+    saveData();
+  }
+
   setInterval(function(){
-  if(SYNC_ENABLED && !isSaving) loadData();
-}, 30000);
+    if(SYNC_ENABLED && !isSaving) loadData();
+  }, 30000);
 })();
 </script>
 </body>
