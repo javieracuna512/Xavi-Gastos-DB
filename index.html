@@ -940,46 +940,51 @@ async function loadData(){
     const res = await fetch(GAS_URL + '?action=load&ts=' + Date.now(), { cache: 'no-store' });
     const data = await res.json();
     if(data.gastos && Array.isArray(data.gastos)){
+      
+      // La nube es la fuente de verdad — partir siempre del historial fijo
       const merged = [...HIST_PREVIO];
       
-      // 1. Agregar todo lo que vino de la nube
+      // Agregar TODO lo que vino de la nube (de cualquier dispositivo)
       data.gastos.forEach(g => {
         if(!merged.find(x => x.id === g.id)) merged.push(g);
       });
       
-      // 2. Agregar gastos locales pendientes aún no subidos
-      try {
-        const raw = localStorage.getItem('javier_gastos');
-        if(raw){
-          JSON.parse(raw).forEach(g => {
-            if(!merged.find(x => x.id === g.id)) merged.push(g);
-          });
-        }
-      } catch(e){}
+      // Agregar gastos locales que AÚN NO llegaron a la nube
+      // (gastos nuevos recién creados en este dispositivo, pendientes de subir)
+      const pendientes = gastos.filter(g => 
+        !HIST_PREVIO.find(h => h.id === g.id) && 
+        !data.gastos.find(n => n.id === g.id)
+      );
+      pendientes.forEach(g => merged.push(g));
       
-      // ✅ FIX: primero asignar gastos, LUEGO guardar localStorage
       gastos = merged;
       localStorage.setItem('javier_gastos', JSON.stringify(gastos));
       renderGastos();
       renderFlujo();
-      setSyncIndicator('ok','Sincronizado ✓');
-      setTimeout(() => setSyncIndicator('idle',''), 3000);
+      setSyncIndicator('ok','Sincronizado ✓ · ' + data.gastos.length + ' en nube');
+      setTimeout(() => setSyncIndicator('idle',''), 4000);
     }
   } catch(e){
     setSyncIndicator('error','Sin conexión - datos locales');
     try {
       const raw = localStorage.getItem('javier_gastos');
-      if(raw){ gastos = JSON.parse(raw); renderGastos(); renderFlujo(); }
-      else { gastos = [...HIST_PREVIO]; renderGastos(); renderFlujo(); }
-    } catch(ex){ gastos = [...HIST_PREVIO]; renderGastos(); renderFlujo(); }
+      if(raw){ 
+        gastos = JSON.parse(raw); 
+      } else { 
+        gastos = [...HIST_PREVIO]; 
+      }
+      renderGastos(); 
+      renderFlujo();
+    } catch(ex){ 
+      gastos = [...HIST_PREVIO]; 
+      renderGastos(); 
+      renderFlujo(); 
+    }
   }
 }
 
 function saveData(){
-  // Todos los gastos que no son del historial fijo original
   const soloNuevos = gastos.filter(g => !HIST_PREVIO.find(h => h.id === g.id));
-  
-  // ✅ FIX: guardar array completo en localStorage
   localStorage.setItem('javier_gastos', JSON.stringify(gastos));
 
   if(!SYNC_ENABLED || soloNuevos.length === 0) {
@@ -996,14 +1001,13 @@ function saveData(){
     
     fetch(url, { method: 'GET', cache: 'no-store' })
     .then(r => r.json())
-    .then(data => {
-      if(data.status === 'ok'){
-        setSyncIndicator('ok','Guardado ✓ · sync en 30s');
-        setTimeout(() => setSyncIndicator('idle',''), 3000);
-        // ✅ FIX: después de guardar en nube, recargar para confirmar
-        setTimeout(() => { if(!isSaving) loadData(); }, 2000);
+    .then(result => {
+      if(result.status === 'ok'){
+        setSyncIndicator('ok','Guardado ✓');
+        // Recargar desde nube para confirmar y ver gastos de otros dispositivos
+        setTimeout(() => loadData(), 1500);
       } else {
-        setSyncIndicator('error','Error nube: ' + (data.message||''));
+        setSyncIndicator('error','Error: ' + (result.message||''));
       }
     })
     .catch(() => {
