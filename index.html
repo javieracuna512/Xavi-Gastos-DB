@@ -1112,19 +1112,43 @@ function renderFlujo(){
   }
   document.getElementById('flujo-body').innerHTML=rows;
   document.getElementById('kpi-ahorro').textContent=fmt(INIT);
-  const hoy=new Date().toISOString().substring(0,7);
-  let acumHoy=INIT;
-  for(let ix=0;ix<21;ix++){
-    const kx=MESES_KEY[ix]; if(kx>hoy) break;
-    const grx=gastosRealesMes[kx]||0;
-    const vidax=grx>0?grx:GASTOS_BASE;
-    acumHoy+=(NETO+c.extras[ix])-(vidax+gespArr[ix]);
+  // Reemplaza desde:
+// const hoy=new Date()...
+// hasta:
+// document.getElementById('kpi-falta-sub')...
+
+const hoy = new Date().toISOString().substring(0, 7); // mes actual "2026-04"
+let acumHoy = INIT;
+
+for (let ix = 0; ix < 21; ix++) {
+  const kx = MESES_KEY[ix];
+  
+  if (kx < hoy) {
+    // Meses anteriores cerrados: usar gasto real si existe, sino base
+    const grx = gastosRealesMes[kx] || 0;
+    const vidax = grx > 0 ? grx : GASTOS_BASE;
+    acumHoy += (NETO + c.extras[ix]) - (vidax + gespArr[ix]);
+  } else if (kx === hoy) {
+    // Mes actual: ingresos completos del mes (ya recibidos) - solo gastos reales registrados
+    const gastosRealsMesActual = gastosRealesMes[kx] || 0;
+    acumHoy += (NETO + c.extras[ix]) - (gastosRealsMesActual + gespArr[ix]);
+    break; // No seguir a meses futuros
+  } else {
+    break; // Meses futuros: ignorar
   }
-  const faltaMaster = Math.max(0, MASTER - acumHoy);
-  const kpiFalta=document.getElementById('kpi-falta');
-  if(masterDone){kpiFalta.textContent='S/ 0 ✓';kpiFalta.style.color='var(--green)';document.getElementById('kpi-falta-sub').textContent='Máster pagado';}
-  else{kpiFalta.textContent=fmt(faltaMaster);kpiFalta.style.color=faltaMaster>0?'var(--red)':'var(--green)';document.getElementById('kpi-falta-sub').textContent = 
-  fmt(MASTER) + ' - acumulado actual ' + fmt(acumHoy);}
+}
+
+const faltaMaster = Math.max(0, MASTER - acumHoy);
+const kpiFalta = document.getElementById('kpi-falta');
+if (masterDone) {
+  kpiFalta.textContent = 'S/ 0 ✓';
+  kpiFalta.style.color = 'var(--green)';
+  document.getElementById('kpi-falta-sub').textContent = 'Máster pagado';
+} else {
+  kpiFalta.textContent = fmt(faltaMaster);
+  kpiFalta.style.color = faltaMaster > 0 ? 'var(--red)' : 'var(--green)';
+  document.getElementById('kpi-falta-sub').textContent = fmt(MASTER) + ' - acumulado hoy ' + fmt(acumHoy);
+}
   document.getElementById('kpi-master-mes').textContent=masterMes||'Octubre 2026';
   document.getElementById('kpi-master-sub').textContent=masterMes?'Objetivo alcanzado':'Límite: oct 2026';
   let acum2=INIT;
