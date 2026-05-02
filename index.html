@@ -224,11 +224,19 @@
         <select id="filtro-mes" onchange="renderGastos()">
           <option value="">Todos</option>
           <option value="2026-01">Ene 2026</option><option value="2026-02">Feb 2026</option>
-          <option value="2026-03">Mar 2026</option><option value="2026-04" selected>Abr 2026</option>
+          <option value="2026-03">Mar 2026</option><option value="2026-04" >Abr 2026</option>
           <option value="2026-05">May 2026</option><option value="2026-06">Jun 2026</option>
           <option value="2026-07">Jul 2026</option><option value="2026-08">Ago 2026</option>
           <option value="2026-09">Set 2026</option><option value="2026-10">Oct 2026</option>
           <option value="2026-11">Nov 2026</option><option value="2026-12">Dic 2026</option>
+          <option value="2027-01">Ene 2027</option><option value="2027-02">Feb 2027</option>
+          <option value="2027-03">Mar 2027</option><option value="2027-04" >Abr 2027</option>
+          <option value="2027-05">May 2027</option><option value="2027-06">Jun 2027</option>
+          <option value="2027-07">Jul 2027</option><option value="2027-08">Ago 2027</option>
+          <option value="2027-09">Set 2027</option><option value="2027-10">Oct 2027</option>
+          <option value="2027-11">Nov 2027</option><option value="2027-12">Dic 2027</option>
+
+          
         </select>
       </div>
       <div class="form-group"><label class="form-label">Tipo de gasto</label>
@@ -1094,7 +1102,8 @@ function renderFlujo(){
     const k=MESES_KEY[i];
     const ing=NETO+c.extras[i];
     const gastosReales=gastosRealesMes[k]||0;
-    const vidaReal=(k<='2026-04'&&gastosReales>0)?gastosReales:GASTOS_BASE;
+    const mesActual = new Date().toISOString().substring(0, 7);
+const vidaReal=(k<=mesActual&&gastosReales>0)?gastosReales:GASTOS_BASE;
     const gast=vidaReal+gespArr[i];
     const flujo=ing-gast;
     acum+=flujo;
@@ -1498,6 +1507,15 @@ document.getElementById('modal').addEventListener('click', e=>{ if(e.target===do
   } catch(e){}
 
   renderFlujo();
+  
+  // Auto-seleccionar mes actual en filtro-mes
+const _hoyMes = new Date().toISOString().substring(0, 7);
+const _selMes = document.getElementById('filtro-mes');
+if (_selMes) {
+  const _opt = _selMes.querySelector(`option[value="${_hoyMes}"]`);
+  if (_opt) _opt.selected = true;
+}
+  
   renderGastos();
   setEsc('base');
   
