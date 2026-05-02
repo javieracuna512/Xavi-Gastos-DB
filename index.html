@@ -1509,12 +1509,17 @@ document.getElementById('modal').addEventListener('click', e=>{ if(e.target===do
   renderFlujo();
   
   // Auto-seleccionar mes actual en filtro-mes
-const _hoyMes = new Date().toISOString().substring(0, 7);
-const _selMes = document.getElementById('filtro-mes');
-if (_selMes) {
+  const _hoyMes = new Date().toISOString().substring(0, 7);
+  const _selMes = document.getElementById('filtro-mes');
+  if (_selMes) {
   const _opt = _selMes.querySelector(`option[value="${_hoyMes}"]`);
   if (_opt) _opt.selected = true;
-}
+  }
+  const _selDash = document.getElementById('dash-mes');
+  if (_selDash) {
+  const _optDash = _selDash.querySelector(`option[value="${_hoyMes}"]`);
+  if (_optDash) _optDash.selected = true;
+  }
   
   renderGastos();
   setEsc('base');
